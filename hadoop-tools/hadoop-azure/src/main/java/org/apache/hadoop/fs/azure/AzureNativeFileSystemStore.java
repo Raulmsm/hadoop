@@ -46,6 +46,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.azure.StorageInterface.CloudAppendBlobWrapper;
 import org.apache.hadoop.fs.azure.StorageInterface.CloudBlobContainerWrapper;
 import org.apache.hadoop.fs.azure.StorageInterface.CloudBlobDirectoryWrapper;
 import org.apache.hadoop.fs.azure.StorageInterface.CloudBlobWrapper;
@@ -1317,9 +1318,12 @@ public class AzureNativeFileSystemStore implements NativeFileSystemStore {
    */
   private OutputStream openOutputStream(final CloudBlobWrapper blob)
       throws StorageException {
-    if (blob instanceof CloudPageBlobWrapperImpl){
+    if (blob instanceof CloudPageBlobWrapperImpl) {
       return new PageBlobOutputStream(
           (CloudPageBlobWrapper)blob, getInstrumentedContext(), sessionConfiguration);
+    } else if (blob instanceof CloudAppendBlobWrapper) {
+      return ((CloudAppendBlobWrapper) blob).openOutputStream(getUploadOptions(),
+              getInstrumentedContext());
     } else {
 
       // Handle both ClouldBlockBlobWrapperImpl and (only for the test code path)
@@ -1335,7 +1339,7 @@ public class AzureNativeFileSystemStore implements NativeFileSystemStore {
    */
   private InputStream openInputStream(CloudBlobWrapper blob)
       throws StorageException, IOException {
-    if (blob instanceof CloudBlockBlobWrapper) {
+    if (blob instanceof CloudBlockBlobWrapper || blob instanceof CloudAppendBlobWrapper) {
       return blob.openInputStream(getDownloadOptions(),
           getInstrumentedContext(isConcurrentOOBAppendAllowed()));
     } else {
@@ -1717,6 +1721,9 @@ public class AzureNativeFileSystemStore implements NativeFileSystemStore {
     if (isPageBlobKey(aKey)) {
       blob = this.container.getPageBlobReference(aKey);
     } else {
+      blob = this.container.getBlobReference(aKey);
+      
+      
       blob = this.container.getBlockBlobReference(aKey);
     blob.setStreamMinimumReadSizeInBytes(downloadBlockSizeBytes);
     blob.setWriteBlockSizeInBytes(uploadBlockSizeBytes);

@@ -347,6 +347,21 @@ abstract class StorageInterface {
      */
     public abstract CloudBlobWrapper getPageBlobReference(String relativePath)
         throws URISyntaxException, StorageException;
+
+    /**
+     * Returns a wrapper for a CloudAppendBlob.
+     *
+     * @param relativePath
+     *            A <code>String</code> that represents the name of the blob, relative to the container 
+     *
+     * @throws StorageException
+     *             If a storage service error occurred.
+     * 
+     * @throws URISyntaxException
+     *             If URI syntax exception occurred.            
+     */
+    public abstract CloudBlobWrapper getAppendBlobReference(String relativePath)
+        throws URISyntaxException, StorageException;
   }
   
   
@@ -689,6 +704,38 @@ abstract class StorageInterface {
 
   }
 
+ /**
+   * A thin wrapper over the {@link CloudAppendBlob} class that simply redirects calls
+   * to the real object except in unit tests.
+   */
+  public abstract interface CloudBlockAppendWrapper
+      extends CloudBlobWrapper {
+    /**
+     * Creates and opens an output stream to write data to the append blob using the specified 
+     * operation context.
+     * 
+     * @param opContext
+     *            An {@link OperationContext} object that represents the context for the current operation. This object
+     *            is used to track requests to the storage service, and to provide additional runtime information about
+     *            the operation.
+     * 
+     * @return A {@link BlobOutputStream} object used to write data to the blob.
+     * 
+     * @throws StorageException
+     *             If a storage service error occurred.
+     */
+    OutputStream openOutputStream(
+        BlobRequestOptions options,
+        OperationContext opContext) throws StorageException;
+   
+    void append(InputStream sourceStream, long length, 
+        AccessCondition accessCondition, BlobRequestOptions options,
+        OperationContext opContext) throws StorageException, IOException;    
+
+    OutputStream openWriteExisting() throws StorageException;
+  }
+
+
   /**
    * A thin wrapper over the {@link CloudPageBlob} class that simply redirects calls
    * to the real object except in unit tests.
@@ -776,4 +823,23 @@ abstract class StorageInterface {
     void uploadMetadata(OperationContext opContext)
         throws StorageException; 
   }
+
+  public abstract interface CloudAppendBlobWrapper
+      extends CloudBlobWrapper {
+
+      OutputStream openWriteExisting(AccessCondition accessCondition, BlobRequestOptions options, 
+        OperationContext opContext) throws StorageException;
+
+      Long appendBlock(InputStream sourceStream, long length, AccessCondition accessCondition, BlobRequestOptions options,
+         OperationContext opContext) throws StorageException, IOException;
+
+      void createOrReplace(AccessCondition accessCondition, BlobRequestOptions options,
+          OperationContext opContext) throws StorageException;
+
+      // This method is inherited from CloudBlobWrapper but needs to be overriden for compatibility
+      OutputStream openOutputStream(
+        BlobRequestOptions options,
+        OperationContext opContext) throws StorageException;      
+      }
+  
 }

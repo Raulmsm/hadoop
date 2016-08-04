@@ -42,6 +42,7 @@ import com.microsoft.azure.storage.blob.BlobProperties;
 import com.microsoft.azure.storage.blob.BlobRequestOptions;
 import com.microsoft.azure.storage.blob.BlockEntry;
 import com.microsoft.azure.storage.blob.BlockListingFilter;
+import com.microsoft.azure.storage.blob.CloudAppendBlob;
 import com.microsoft.azure.storage.blob.CloudBlob;
 import com.microsoft.azure.storage.blob.CloudBlobClient;
 import com.microsoft.azure.storage.blob.CloudBlobContainer;
@@ -267,6 +268,13 @@ class StorageInterfaceImpl extends StorageInterface {
           container.getPageBlobReference(relativePath));
     }
 
+    @Override
+    public CloudBlobWrapper getAppendBlobReference(String relativePath)
+        throws URISyntaxException, StorageException {
+      return new CloudAppendBlobWrapperImpl(
+          container.getAppendBlobReference(relativePath));
+    }
+
   }
   
   abstract static class CloudBlobWrapperImpl implements CloudBlobWrapper {
@@ -468,6 +476,45 @@ class StorageInterfaceImpl extends StorageInterface {
       ((CloudBlockBlob) getBlob()).commitBlockList(blockList, accessCondition, options, opContext);
     }
   }
+
+  //
+  // CloudAppendBlobWrapperImpl
+  //
+    static class CloudAppendBlobWrapperImpl extends CloudBlobWrapperImpl implements CloudAppendBlobWrapper {
+    public CloudAppendBlobWrapperImpl(CloudAppendBlob blob) {
+      super(blob);
+    }
+
+      @Override
+      public OutputStream openWriteExisting(AccessCondition accessCondition, BlobRequestOptions options, 
+        OperationContext opContext) throws StorageException {
+          return ((CloudAppendBlob) getBlob()).openWriteExisting(accessCondition, options, opContext);
+      }
+
+      @Override
+      public Long appendBlock(InputStream sourceStream, long length, AccessCondition accessCondition, BlobRequestOptions options,
+         OperationContext opContext) throws StorageException, IOException {
+          return ((CloudAppendBlob) getBlob()).appendBlock(sourceStream, length, accessCondition, options, opContext);
+      }
+
+      @Override
+      public void createOrReplace(AccessCondition accessCondition, BlobRequestOptions options,
+          OperationContext opContext) throws StorageException {
+            ((CloudAppendBlob) getBlob()).createOrReplace(accessCondition, options, opContext);
+      }
+
+      @Override
+      // This method is inherited from CloudBlobWrapper but needs to be overriden for compatibility
+      public OutputStream openOutputStream(
+        BlobRequestOptions options,
+        OperationContext opContext) throws StorageException {
+          return this.openWriteExisting(null, options, opContext);
+      }
+  }
+
+  //
+  // CloudPageBlobWrapperImpl
+  //
 
   static class CloudPageBlobWrapperImpl extends CloudBlobWrapperImpl implements CloudPageBlobWrapper {
     public CloudPageBlobWrapperImpl(CloudPageBlob blob) {
