@@ -228,6 +228,13 @@ public class MockStorageInterface extends StorageInterface {
           false)), null, 0);
     }
 
+@Override
+public CloudAppendBlobWrapper getAppendBlobReference(String relativePath)
+    throws URISyntaxException, StorageException{
+      return new MockCloudAppendBlobWrapper(new URI(fullUriString(relativePath,
+          false)), null, 0);
+    }
+
     @Override
     public CloudPageBlobWrapper getPageBlobReference(String blobAddressUri)
         throws URISyntaxException, StorageException {
@@ -543,6 +550,75 @@ public class MockStorageInterface extends StorageInterface {
       throw new UnsupportedOperationException("uploadMetadata not used in Mock Tests");
     }
   }
+
+class MockCloudAppendBlobWrapper extends MockCloudBlobWrapper
+    implements CloudAppendBlobWrapper {
+
+    public MockCloudAppendBlobWrapper(URI uri, HashMap<String, String> metadata,
+        int length) {
+      super(uri, metadata, length);
+    }
+
+      @Override
+      public OutputStream openWriteExisting(AccessCondition accessCondition, BlobRequestOptions options,
+        OperationContext opContext) throws StorageException {
+          throw new UnsupportedOperationException("uploadMetadata not used in Mock Tests");
+      }
+
+      @Override
+      public Long appendBlock(InputStream sourceStream, long length, AccessCondition accessCondition, BlobRequestOptions options,
+         OperationContext opContext) throws StorageException, IOException {
+          throw new UnsupportedOperationException("uploadMetadata not used in Mock Tests");
+      }
+
+      @Override
+      public void createOrReplace(AccessCondition accessCondition, BlobRequestOptions options,
+          OperationContext opContext) throws StorageException {
+      }
+
+      @Override
+      // This method is inherited from CloudBlobWrapper but needs to be overriden for compatibility
+      public OutputStream openOutputStream(
+        BlobRequestOptions options,
+        OperationContext opContext) throws StorageException {
+          throw new UnsupportedOperationException("uploadMetadata not used in Mock Tests");
+      }
+
+      @Override
+      public CloudBlob getBlob() {
+        return null;
+      }
+
+      @Override
+      public void setWriteBlockSizeInBytes(int writeBlockSizeInBytes) {
+      }
+
+      @Override
+      public StorageUri getStorageUri() {
+          throw new NotImplementedException();
+      }
+
+      @Override
+      public void setStreamMinimumReadSizeInBytes(int minimumReadSize) {
+      }
+
+      @Override
+      public SelfRenewingLease acquireLease() {
+        return null;
+      }
+
+      @Override
+      public void uploadProperties(OperationContext opContext,
+          SelfRenewingLease lease)
+          throws StorageException {
+      }
+
+      public void uploadMetadata(AccessCondition accessCondition, BlobRequestOptions options,
+        OperationContext opContext) throws StorageException {
+      throw new UnsupportedOperationException("uploadMetadata not used in Mock Tests");
+    }
+  }
+
 
   class MockCloudPageBlobWrapper extends MockCloudBlobWrapper
     implements CloudPageBlobWrapper {

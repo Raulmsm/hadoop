@@ -53,7 +53,6 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.apache.hadoop.fs.azure.AzureException;
 import org.apache.hadoop.fs.azure.NativeAzureFileSystem.FolderRenamePending;
 
 import com.microsoft.azure.storage.AccessCondition;
@@ -69,7 +68,6 @@ import com.microsoft.azure.storage.blob.CloudBlob;
  * from one of the subclasses
  */
 public abstract class NativeAzureFileSystemBaseTest {
-
   protected FileSystem fs;
   private AzureBlobStorageTestAccount testAccount;
   private final long modifiedTimeErrorMargin = 5 * 1000; // Give it +/-5 seconds

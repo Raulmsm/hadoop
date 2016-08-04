@@ -49,6 +49,7 @@ import com.microsoft.azure.storage.StorageCredentialsAnonymous;
 import com.microsoft.azure.storage.blob.BlobContainerPermissions;
 import com.microsoft.azure.storage.blob.BlobContainerPublicAccessType;
 import com.microsoft.azure.storage.blob.BlobOutputStream;
+import com.microsoft.azure.storage.blob.CloudAppendBlob;
 import com.microsoft.azure.storage.blob.CloudBlobClient;
 import com.microsoft.azure.storage.blob.CloudBlobContainer;
 import com.microsoft.azure.storage.blob.CloudBlockBlob;
@@ -80,7 +81,9 @@ public final class AzureBlobStorageTestAccount {
   private static final String KEY_DISABLE_THROTTLING = "fs.azure.disable.bandwidth.throttling";
   private static final String KEY_READ_TOLERATE_CONCURRENT_APPEND = "fs.azure.io.read.tolerate.concurrent.append";
   public static final String DEFAULT_PAGE_BLOB_DIRECTORY = "pageBlobs";
+  public static final String DEFAULT_APPEND_BLOB_DIRECTORY = "appendBlobs";
   public static final String DEFAULT_ATOMIC_RENAME_DIRECTORIES = "/atomicRenameDir1,/atomicRenameDir2";
+
 
   private CloudStorageAccount account;
   private CloudBlobContainer container;
@@ -213,7 +216,7 @@ public final class AzureBlobStorageTestAccount {
 
 
   /**
-   * Gets the blob reference to the given blob key.
+   * Gets the block blob reference to the given blob key.
    * 
    * @param blobKey
    *          The blob key (no initial slash).
@@ -222,6 +225,19 @@ public final class AzureBlobStorageTestAccount {
   public CloudBlockBlob getBlobReference(String blobKey)
       throws Exception {
     return container.getBlockBlobReference(
+        String.format(blobKey));
+  }
+
+  /**
+   * Gets the append blob reference to the given blob key.
+   *
+   * @param blobKey
+   *          The blob key (no initial slash).
+   * @return The blob reference.
+   */
+  public CloudAppendBlob getAppendBlobReference(String blobKey)
+      throws Exception {
+    return container.getAppendBlobReference(
         String.format(blobKey));
   }
 
@@ -292,6 +308,14 @@ public final class AzureBlobStorageTestAccount {
           "/" + DEFAULT_PAGE_BLOB_DIRECTORY);
     }
   }
+
+  private static void configureAppendBlobDir(Configuration conf) {
+        if (conf.get(AzureNativeFileSystemStore.KEY_APPEND_BLOB_DIRECTORIES) == null) {
+          conf.set(AzureNativeFileSystemStore.KEY_APPEND_BLOB_DIRECTORIES,
+              "/" + DEFAULT_APPEND_BLOB_DIRECTORY);
+        }
+      }
+
 
   /** Do the same for the atomic rename directories configuration */
   private static void configureAtomicRenameDir(Configuration conf) {
@@ -519,6 +543,7 @@ public final class AzureBlobStorageTestAccount {
     CloudBlobContainer container = null;
     Configuration conf = createTestConfiguration(initialConfiguration);
     configurePageBlobDir(conf);
+    configureAppendBlobDir(conf);
     configureAtomicRenameDir(conf);
     CloudStorageAccount account = createTestAccount(conf);
     if (account == null) {

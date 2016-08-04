@@ -188,7 +188,7 @@ public class NativeAzureFileSystem extends FileSystem {
       JsonNode oldFolderName = json.get("OldFolderName");
       JsonNode newFolderName = json.get("NewFolderName");
       if (oldFolderName == null || newFolderName == null) {
-    	  this.committed = false;
+        this.committed = false;
       } else {
         this.srcKey = oldFolderName.getTextValue();
         this.dstKey = newFolderName.getTextValue();
@@ -1293,7 +1293,7 @@ public class NativeAzureFileSystem extends FileSystem {
     return instrumentation;
   }
 
-  /** This optional operation is not yet supported. */
+  /** This operation is only supported for Append Blobs. */
   @Override
   public FSDataOutputStream append(Path f, int bufferSize, Progressable progress)
       throws IOException {
@@ -1494,7 +1494,6 @@ public class NativeAzureFileSystem extends FileSystem {
       short replication, long blockSize, Progressable progress,
       SelfRenewingLease parentFolderLease)
           throws FileAlreadyExistsException, IOException {
-
     LOG.debug("Creating file: {}", f.toString());
 
     if (containsColon(f)) {
@@ -1504,7 +1503,6 @@ public class NativeAzureFileSystem extends FileSystem {
 
     Path absolutePath = makeAbsolute(f);
     String key = pathToKey(absolutePath);
-
     FileMetadata existingMetadata = store.retrieveMetadata(key);
     if (existingMetadata != null) {
       if (existingMetadata.isDir()) {
@@ -1548,7 +1546,7 @@ public class NativeAzureFileSystem extends FileSystem {
     PermissionStatus permissionStatus = createPermissionStatus(masked);
 
     OutputStream bufOutStream;
-    if (store.isPageBlobKey(key)) {
+    if (store.isPageBlobKey(key) || store.isAppendBlobKey(key)) {
       // Store page blobs directly in-place without renames.
       bufOutStream = store.storefile(key, permissionStatus);
     } else {

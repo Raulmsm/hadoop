@@ -309,7 +309,7 @@ final class PageBlobOutputStream extends OutputStream implements Syncable {
         if (dataOffset >= previousLastPageDataWritten.length) {
           // Then write the current payload's data.
           System.arraycopy(dataPayload, 
-        	  dataOffset - previousLastPageDataWritten.length,
+              dataOffset - previousLastPageDataWritten.length,
               rawPayload, rawOffset, bytesToCopyFromDataPayload);
         }
       }
@@ -538,7 +538,7 @@ final class PageBlobOutputStream extends OutputStream implements Syncable {
   public synchronized void hsync() throws IOException {
     LOG.debug("Entering PageBlobOutputStream#hsync().");
     long start = System.currentTimeMillis();
-  	flush();
+      flush();
     LOG.debug(ioThreadPool.toString());
     try {
       if (lastQueuedTask != null) {
@@ -550,7 +550,7 @@ final class PageBlobOutputStream extends OutputStream implements Syncable {
       Thread.currentThread().interrupt();
     }
     LOG.debug("Leaving PageBlobOutputStream#hsync(). Total hsync duration = "
-  	  + (System.currentTimeMillis() - start) + " msec.");
+        + (System.currentTimeMillis() - start) + " msec.");
   }
 
   @Override
