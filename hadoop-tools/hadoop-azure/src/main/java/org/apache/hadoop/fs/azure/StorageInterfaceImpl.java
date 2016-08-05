@@ -140,6 +140,8 @@ class StorageInterfaceImpl extends StorageInterface {
         return new CloudBlockBlobWrapperImpl((CloudBlockBlob) unwrapped);
       } else if (unwrapped instanceof CloudPageBlob) {
         return new CloudPageBlobWrapperImpl((CloudPageBlob) unwrapped);
+      } else if (unwrapped instanceof CloudAppendBlob) {
+          return new CloudAppendBlobWrapperImpl((CloudAppendBlob) unwrapped);
       } else {
         return unwrapped;
       }
@@ -172,6 +174,7 @@ class StorageInterfaceImpl extends StorageInterface {
         boolean useFlatBlobListing, EnumSet<BlobListingDetails> listingDetails,
         BlobRequestOptions options, OperationContext opContext)
         throws URISyntaxException, StorageException {
+    	
       return WrappingIterator.wrap(directory.listBlobs(prefix,
           useFlatBlobListing, listingDetails, options, opContext));
     }
@@ -250,14 +253,13 @@ class StorageInterfaceImpl extends StorageInterface {
     public CloudBlobDirectoryWrapper getDirectoryReference(String relativePath)
         throws URISyntaxException, StorageException {
 
-      CloudBlobDirectory dir = container.getDirectoryReference(relativePath);
+      CloudBlobDirectory dir = container.getDirectoryReference(relativePath);             
       return new CloudBlobDirectoryWrapperImpl(dir);
     }
 
     @Override
     public CloudBlobWrapper getBlockBlobReference(String relativePath)
         throws URISyntaxException, StorageException {
-
       return new CloudBlockBlobWrapperImpl(container.getBlockBlobReference(relativePath));
     }
     
