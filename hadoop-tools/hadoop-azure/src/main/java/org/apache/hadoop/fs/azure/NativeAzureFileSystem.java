@@ -1207,7 +1207,7 @@ public class NativeAzureFileSystem extends FileSystem {
   @VisibleForTesting
   public String pathToKey(Path path) {
     // Convert the path to a URI to parse the scheme, the authority, and the
-    // path from the path object.
+    // path from the path object.	 
     URI tmpUri = path.toUri();
     String pathUri = tmpUri.getPath();
 
@@ -1293,7 +1293,7 @@ public class NativeAzureFileSystem extends FileSystem {
     return instrumentation;
   }
 
-  /** This optional operation is not yet supported. */
+  /** This operation is only supported for Append Blobs. */
   @Override
   public FSDataOutputStream append(Path f, int bufferSize, Progressable progress)
       throws IOException {
@@ -1494,7 +1494,6 @@ public class NativeAzureFileSystem extends FileSystem {
       short replication, long blockSize, Progressable progress,
       SelfRenewingLease parentFolderLease)
           throws FileAlreadyExistsException, IOException {
-
     LOG.debug("Creating file: {}", f.toString());
 
     if (containsColon(f)) {
@@ -1503,8 +1502,7 @@ public class NativeAzureFileSystem extends FileSystem {
     }
 
     Path absolutePath = makeAbsolute(f);
-    String key = pathToKey(absolutePath);
-
+    String key = pathToKey(absolutePath);   
     FileMetadata existingMetadata = store.retrieveMetadata(key);
     if (existingMetadata != null) {
       if (existingMetadata.isDir()) {
@@ -1546,7 +1544,7 @@ public class NativeAzureFileSystem extends FileSystem {
     // Mask the permission first (with the default permission mask as well).
     FsPermission masked = applyUMask(permission, UMaskApplyMode.NewFile);
     PermissionStatus permissionStatus = createPermissionStatus(masked);
-
+    
     OutputStream bufOutStream;
     if (store.isPageBlobKey(key)) {
       // Store page blobs directly in-place without renames.
