@@ -2750,6 +2750,9 @@ public class AzureNativeFileSystemStore implements NativeFileSystemStore {
 
       if (isPageBlobKey(key)) {
         throw new UnsupportedOperationException("Append not supported for Page Blobs");
+      } else if (isAppendBlobKey(key)) {
+    	  CloudBlobWrapper blob =  this.container.getAppendBlobReference(key);
+    	  return new DataOutputStream(((CloudAppendBlobWrapper)blob).openOutputStream(getUploadOptions(), getInstrumentedContext()));
       }
 
       CloudBlobWrapper blob =  this.container.getBlockBlobReference(key);
