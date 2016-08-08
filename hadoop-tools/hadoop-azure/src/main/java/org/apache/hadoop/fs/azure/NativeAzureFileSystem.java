@@ -1546,7 +1546,7 @@ public class NativeAzureFileSystem extends FileSystem {
     PermissionStatus permissionStatus = createPermissionStatus(masked);
     
     OutputStream bufOutStream;
-    if (store.isPageBlobKey(key)) {
+    if (store.isPageBlobKey(key) || store.isAppendBlobKey(key)) {
       // Store page blobs directly in-place without renames.
       bufOutStream = store.storefile(key, permissionStatus);
     } else {
