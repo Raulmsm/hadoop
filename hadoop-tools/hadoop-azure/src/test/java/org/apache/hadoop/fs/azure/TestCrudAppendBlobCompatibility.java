@@ -37,14 +37,15 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class TestCrudAppendBlobCompatibility {
-	  private static final Log LOG = LogFactory.getLog(TestReadAndSeekPageBlobAfterWrite.class);
+      private static final Log LOG = LogFactory.getLog(TestReadAndSeekPageBlobAfterWrite.class);
 	  
-	  protected static String appendBlobDirectory = "kek";//AzureBlobStorageTestAccount.DEFAULT_APPEND_BLOB_DIRECTORY;
+      private final int ONE_MEGABYTE = 1024*1024;	  	  	 
 	  
 	  private FileSystem fs;
 	  private AzureBlobStorageTestAccount testAccount;
 	  private Random rand = new Random();
 	  
+	  protected static String appendBlobDirectory = AzureBlobStorageTestAccount.DEFAULT_APPEND_BLOB_DIRECTORY;
 	  
 	  protected AzureBlobStorageTestAccount createTestAccount() throws Exception {
 		    return AzureBlobStorageTestAccount.create();
@@ -92,7 +93,7 @@ public class TestCrudAppendBlobCompatibility {
   
   @Test
   public void TestAppendBlobReadWrite() throws Exception {
-	  int fiveMegaBytes = 5 * 1024 * 1024;
+	  int fiveMegaBytes = 5 * ONE_MEGABYTE;
 	  byte[] randomBytes = generateRandomBytes(fiveMegaBytes);
       String blobPath = appendBlobDirectory + "/foo";
 	  Path appendBlob = new Path("/" + blobPath);
@@ -101,7 +102,6 @@ public class TestCrudAppendBlobCompatibility {
 	  assertTrue(isAppendBlob(fs, blobPath + "/"));
 	 
 	  // Write 5 MB (above block size)
-
 	  createdBlobOutStream.write(randomBytes);
 	  createdBlobOutStream.hflush();
 	  FileStatus blobStatus = fs.getFileStatus(appendBlob);
@@ -112,36 +112,33 @@ public class TestCrudAppendBlobCompatibility {
 	  blobInStream.read(readBytes, 0, fiveMegaBytes);
 	  assertTrue(Arrays.equals(randomBytes, readBytes));
   }
-
-  // Doesn't work atm
-  public void TestAppendBlobSeekRead() throws Exception {
-	  int seekPosition = 3657728;
-	  int sevenMegaBytes = 7 * 1024 * 1024;
+  
+  @Test
+  public void TestAppendBlobSeekRead() throws Exception {	  
+	  int sevenMegaBytes = 7 * ONE_MEGABYTE;
+	  int seekPosition = 4 * ONE_MEGABYTE - 1;
+	  String blobPath = appendBlobDirectory + "/foo";
 	  byte[] randomBytes = generateRandomBytes(sevenMegaBytes);
-      String blobPath = appendBlobDirectory + "/foo";
+      
 	  Path appendBlob = new Path("/" + blobPath);
 	  FSDataOutputStream createdBlobOutStream = fs.create(appendBlob);
 	  assertTrue(fs.exists(appendBlob));
-//	  assertTrue(isAppendBlob(fs, blobPath + "/"));
+	  assertTrue(isAppendBlob(fs, blobPath + "/"));
 	 
 	  createdBlobOutStream.write(randomBytes);
 	  createdBlobOutStream.hflush();
 	  createdBlobOutStream.close();
 	  FileStatus blobStatus = fs.getFileStatus(appendBlob);
 	  assertEquals(sevenMegaBytes, blobStatus.getLen());
-
-	  byte[] readAfterSeekBytes = new byte[1024*1024];
-	  byte[] readWithOffset = new byte[1024*1024];
+	  
+	  byte[] targetChunk = new byte[ONE_MEGABYTE];
+	  byte[] readAfterSeekBytes = new byte[ONE_MEGABYTE];	  
+      System.arraycopy(randomBytes, seekPosition, targetChunk, 0, ONE_MEGABYTE);		 	  
 	  FSDataInputStream blobInStream = fs.open(appendBlob);
-	  System.out.println("First position: " + blobInStream.getPos());
-	  blobInStream.read(readWithOffset, 1, 1024*1024);
-//	  System.out.println("After read: " + blobInStream.getPos());
-//	  blobInStream.seek(seekPosition);	  
-//	  System.out.println("After seek: " + blobInStream.getPos());
-//	  blobInStream.read(readAfterSeekBytes);	
-//	  System.out.println("After final read: " + blobInStream.getPos());
-//	  
-//	  assertTrue(Arrays.equals(readAfterSeekBytes, readWithOffset));
+	  blobInStream.seek(seekPosition);
+	  blobInStream.read(readAfterSeekBytes, 0, ONE_MEGABYTE);
+	  
+	  assertTrue(Arrays.equals(targetChunk, readAfterSeekBytes));
   }
     
   /**
