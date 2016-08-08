@@ -509,9 +509,9 @@ class StorageInterfaceImpl extends StorageInterface {
       // This method is inherited from CloudBlobWrapper but needs to be overridden for compatibility
       public OutputStream openOutputStream(
         BlobRequestOptions options,
-        OperationContext opContext) throws StorageException {    	  
-    	  ((CloudAppendBlob) getBlob()).createOrReplace(null, options, opContext);
-          return this.openWriteExisting(null, options, opContext);
+        OperationContext opContext) throws StorageException {
+    	  System.out.println("Calling open out stream on append for blob: " + getBlob().getUri());
+    	  return ((CloudAppendBlob) getBlob()).openWriteNew(null, options, opContext);
       }
   }
 
