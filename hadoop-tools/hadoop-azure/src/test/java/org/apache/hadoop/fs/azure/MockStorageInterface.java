@@ -66,8 +66,7 @@ import javax.ws.rs.core.UriBuilderException;
  */
 public class MockStorageInterface extends StorageInterface {
   private InMemoryBlockBlobStore backingStore;
-  private final ArrayList<PreExistingContainer> preExistingContainers =
-      new ArrayList<MockStorageInterface.PreExistingContainer>();
+  private final ArrayList<PreExistingContainer> preExistingContainers = new ArrayList<MockStorageInterface.PreExistingContainer>();
   private String baseUriString;
   private static final URLCodec codec = new URLCodec();
 
@@ -91,7 +90,8 @@ public class MockStorageInterface extends StorageInterface {
   }
 
   @Override
-  public void setRetryPolicyFactory(final RetryPolicyFactory retryPolicyFactory) {
+  public void setRetryPolicyFactory(
+      final RetryPolicyFactory retryPolicyFactory) {
   }
 
   @Override
@@ -122,9 +122,9 @@ public class MockStorageInterface extends StorageInterface {
 
   /**
    * Utility function used to convert a given URI to a decoded string
-   * representation sent to the backing store. URIs coming as input
-   * to this class will be encoded by the URI class, and we want
-   * the underlying storage to store keys in their original UTF-8 form.
+   * representation sent to the backing store. URIs coming as input to this
+   * class will be encoded by the URI class, and we want the underlying storage
+   * to store keys in their original UTF-8 form.
    */
   private static String convertUriToDecodedString(URI uri) {
     try {
@@ -217,22 +217,22 @@ public class MockStorageInterface extends StorageInterface {
     @Override
     public CloudBlobDirectoryWrapper getDirectoryReference(String relativePath)
         throws URISyntaxException, StorageException {
-      return new MockCloudBlobDirectoryWrapper(new URI(fullUriString(
-          relativePath, true)));
+      return new MockCloudBlobDirectoryWrapper(
+          new URI(fullUriString(relativePath, true)));
     }
 
     @Override
     public CloudBlockBlobWrapper getBlockBlobReference(String relativePath)
         throws URISyntaxException, StorageException {
-      return new MockCloudBlockBlobWrapper(new URI(fullUriString(relativePath,
-          false)), null, 0);
+      return new MockCloudBlockBlobWrapper(
+          new URI(fullUriString(relativePath, false)), null, 0);
     }
 
-@Override
-public CloudAppendBlobWrapper getAppendBlobReference(String relativePath)
-    throws URISyntaxException, StorageException{
-      return new MockCloudAppendBlobWrapper(new URI(fullUriString(relativePath,
-          false)), null, 0);
+    @Override
+    public CloudAppendBlobWrapper getAppendBlobReference(String relativePath)
+        throws URISyntaxException, StorageException {
+      return new MockCloudAppendBlobWrapper(
+          new URI(fullUriString(relativePath, false)), null, 0);
     }
 
     @Override
@@ -243,7 +243,8 @@ public CloudAppendBlobWrapper getAppendBlobReference(String relativePath)
 
     // helper to create full URIs for directory and blob.
     // use withTrailingSlash=true to get a good path for a directory.
-    private String fullUriString(String relativePath, boolean withTrailingSlash) {
+    private String fullUriString(String relativePath,
+        boolean withTrailingSlash) {
       String baseUri = this.baseUri;
       if (!baseUri.endsWith("/")) {
         baseUri += "/";
@@ -280,14 +281,14 @@ public CloudAppendBlobWrapper getAppendBlobReference(String relativePath)
     }
 
     @Override
-    public CloudBlobContainer getContainer() throws URISyntaxException,
-        StorageException {
+    public CloudBlobContainer getContainer()
+        throws URISyntaxException, StorageException {
       return null;
     }
 
     @Override
-    public CloudBlobDirectory getParent() throws URISyntaxException,
-        StorageException {
+    public CloudBlobDirectory getParent()
+        throws URISyntaxException, StorageException {
       return null;
     }
 
@@ -314,29 +315,28 @@ public CloudAppendBlobWrapper getAppendBlobReference(String relativePath)
       }
 
       String fullPrefix = convertUriToDecodedString(searchUri);
-      boolean includeMetadata = listingDetails.contains(BlobListingDetails.METADATA);
+      boolean includeMetadata = listingDetails
+          .contains(BlobListingDetails.METADATA);
       HashSet<String> addedDirectories = new HashSet<String>();
-      for (InMemoryBlockBlobStore.ListBlobEntry current : backingStore.listBlobs(
-          fullPrefix, includeMetadata)) {
+      for (InMemoryBlockBlobStore.ListBlobEntry current : backingStore
+          .listBlobs(fullPrefix, includeMetadata)) {
         int indexOfSlash = current.getKey().indexOf('/', fullPrefix.length());
         if (useFlatBlobListing || indexOfSlash < 0) {
           if (current.isPageBlob()) {
             ret.add(new MockCloudPageBlobWrapper(
-                convertKeyToEncodedUri(current.getKey()),
-                current.getMetadata(),
+                convertKeyToEncodedUri(current.getKey()), current.getMetadata(),
                 current.getContentLength()));
           } else {
-          ret.add(new MockCloudBlockBlobWrapper(
-              convertKeyToEncodedUri(current.getKey()),
-              current.getMetadata(),
-              current.getContentLength()));
+            ret.add(new MockCloudBlockBlobWrapper(
+                convertKeyToEncodedUri(current.getKey()), current.getMetadata(),
+                current.getContentLength()));
           }
         } else {
           String directoryName = current.getKey().substring(0, indexOfSlash);
           if (!addedDirectories.contains(directoryName)) {
             addedDirectories.add(current.getKey());
-            ret.add(new MockCloudBlobDirectoryWrapper(new URI(
-                directoryName + "/")));
+            ret.add(new MockCloudBlobDirectoryWrapper(
+                new URI(directoryName + "/")));
           }
         }
       }
@@ -351,8 +351,7 @@ public CloudAppendBlobWrapper getAppendBlobReference(String relativePath)
 
   abstract class MockCloudBlobWrapper implements CloudBlobWrapper {
     protected final URI uri;
-    protected HashMap<String, String> metadata =
-        new HashMap<String, String>();
+    protected HashMap<String, String> metadata = new HashMap<String, String>();
     protected BlobProperties properties;
 
     protected MockCloudBlobWrapper(URI uri, HashMap<String, String> metadata,
@@ -360,42 +359,44 @@ public CloudAppendBlobWrapper getAppendBlobReference(String relativePath)
       this.uri = uri;
       this.metadata = metadata;
       this.properties = new BlobProperties();
-      
-      this.properties=updateLastModifed(this.properties);
-      this.properties=updateLength(this.properties,length);
+
+      this.properties = updateLastModifed(this.properties);
+      this.properties = updateLength(this.properties, length);
     }
-    
-    protected BlobProperties updateLastModifed(BlobProperties properties){
-      try{
-          Method setLastModified =properties.getClass().
-            getDeclaredMethod("setLastModified", Date.class);
-          setLastModified.setAccessible(true);
-          setLastModified.invoke(this.properties,
+
+    protected BlobProperties updateLastModifed(BlobProperties properties) {
+      try {
+        Method setLastModified = properties.getClass()
+            .getDeclaredMethod("setLastModified", Date.class);
+        setLastModified.setAccessible(true);
+        setLastModified.invoke(this.properties,
             Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTime());
-      }catch(Exception e){
-          throw new RuntimeException(e);
+      } catch (Exception e) {
+        throw new RuntimeException(e);
       }
       return properties;
     }
-    
-    protected BlobProperties updateLength(BlobProperties properties,int length) {
-      try{
-          Method setLength =properties.getClass().
-            getDeclaredMethod("setLength", long.class);
-          setLength.setAccessible(true);
-          setLength.invoke(this.properties, length);
-      }catch (Exception e){
-         throw new RuntimeException(e);
+
+    protected BlobProperties updateLength(BlobProperties properties,
+        int length) {
+      try {
+        Method setLength = properties.getClass().getDeclaredMethod("setLength",
+            long.class);
+        setLength.setAccessible(true);
+        setLength.invoke(this.properties, length);
+      } catch (Exception e) {
+        throw new RuntimeException(e);
       }
       return properties;
     }
-    
+
     protected void refreshProperties(boolean getMetadata) {
       if (backingStore.exists(convertUriToDecodedString(uri))) {
-        byte[] content = backingStore.getContent(convertUriToDecodedString(uri));
+        byte[] content = backingStore
+            .getContent(convertUriToDecodedString(uri));
         properties = new BlobProperties();
-        this.properties=updateLastModifed(this.properties);
-        this.properties=updateLength(this.properties, content.length);
+        this.properties = updateLastModifed(this.properties);
+        this.properties = updateLength(this.properties, content.length);
         if (getMetadata) {
           metadata = backingStore.getMetadata(convertUriToDecodedString(uri));
         }
@@ -403,14 +404,14 @@ public CloudAppendBlobWrapper getAppendBlobReference(String relativePath)
     }
 
     @Override
-    public CloudBlobContainer getContainer() throws URISyntaxException,
-        StorageException {
+    public CloudBlobContainer getContainer()
+        throws URISyntaxException, StorageException {
       return null;
     }
 
     @Override
-    public CloudBlobDirectory getParent() throws URISyntaxException,
-        StorageException {
+    public CloudBlobDirectory getParent()
+        throws URISyntaxException, StorageException {
       return null;
     }
 
@@ -430,16 +431,18 @@ public CloudAppendBlobWrapper getAppendBlobReference(String relativePath)
     }
 
     @Override
-    public void startCopyFromBlob(CloudBlobWrapper sourceBlob, BlobRequestOptions options,
-        OperationContext opContext) throws StorageException, URISyntaxException {
-      backingStore.copy(convertUriToDecodedString(sourceBlob.getUri()), convertUriToDecodedString(uri));
-      //TODO: set the backingStore.properties.CopyState and
-      //      update azureNativeFileSystemStore.waitForCopyToComplete
+    public void startCopyFromBlob(CloudBlobWrapper sourceBlob,
+        BlobRequestOptions options, OperationContext opContext)
+        throws StorageException, URISyntaxException {
+      backingStore.copy(convertUriToDecodedString(sourceBlob.getUri()),
+          convertUriToDecodedString(uri));
+      // TODO: set the backingStore.properties.CopyState and
+      // update azureNativeFileSystemStore.waitForCopyToComplete
     }
 
     @Override
     public CopyState getCopyState() {
-       return this.properties.getCopyState();
+      return this.properties.getCopyState();
     }
 
     @Override
@@ -486,7 +489,7 @@ public CloudAppendBlobWrapper getAppendBlobReference(String relativePath)
   }
 
   class MockCloudBlockBlobWrapper extends MockCloudBlobWrapper
-    implements CloudBlockBlobWrapper {
+      implements CloudBlockBlobWrapper {
     public MockCloudBlockBlobWrapper(URI uri, HashMap<String, String> metadata,
         int length) {
       super(uri, metadata, length);
@@ -513,7 +516,8 @@ public CloudAppendBlobWrapper getAppendBlobReference(String relativePath)
     }
 
     @Override
-    public void uploadProperties(OperationContext context, SelfRenewingLease lease) {
+    public void uploadProperties(OperationContext context,
+        SelfRenewingLease lease) {
     }
 
     @Override
@@ -527,101 +531,115 @@ public CloudAppendBlobWrapper getAppendBlobReference(String relativePath)
     }
 
     @Override
-    public List<BlockEntry> downloadBlockList(BlockListingFilter filter, BlobRequestOptions options,
-        OperationContext opContext) throws IOException, StorageException {
+    public List<BlockEntry> downloadBlockList(BlockListingFilter filter,
+        BlobRequestOptions options, OperationContext opContext)
+        throws IOException, StorageException {
 
-      throw new UnsupportedOperationException("downloadBlockList not used in Mock Tests");
+      throw new UnsupportedOperationException(
+          "downloadBlockList not used in Mock Tests");
     }
+
     @Override
     public void uploadBlock(String blockId, InputStream sourceStream,
-        long length, BlobRequestOptions options,
-        OperationContext opContext) throws IOException, StorageException {
-      throw new UnsupportedOperationException("uploadBlock not used in Mock Tests");
+        long length, BlobRequestOptions options, OperationContext opContext)
+        throws IOException, StorageException {
+      throw new UnsupportedOperationException(
+          "uploadBlock not used in Mock Tests");
     }
 
     @Override
-    public void commitBlockList(List<BlockEntry> blockList, AccessCondition accessCondition,
-        BlobRequestOptions options, OperationContext opContext) throws IOException, StorageException {
-      throw new UnsupportedOperationException("commitBlockList not used in Mock Tests");
+    public void commitBlockList(List<BlockEntry> blockList,
+        AccessCondition accessCondition, BlobRequestOptions options,
+        OperationContext opContext) throws IOException, StorageException {
+      throw new UnsupportedOperationException(
+          "commitBlockList not used in Mock Tests");
     }
 
-    public void uploadMetadata(AccessCondition accessCondition, BlobRequestOptions options,
-        OperationContext opContext) throws StorageException {
-      throw new UnsupportedOperationException("uploadMetadata not used in Mock Tests");
+    public void uploadMetadata(AccessCondition accessCondition,
+        BlobRequestOptions options, OperationContext opContext)
+        throws StorageException {
+      throw new UnsupportedOperationException(
+          "uploadMetadata not used in Mock Tests");
     }
   }
 
-class MockCloudAppendBlobWrapper extends MockCloudBlobWrapper
-    implements CloudAppendBlobWrapper {
+  class MockCloudAppendBlobWrapper extends MockCloudBlobWrapper
+      implements CloudAppendBlobWrapper {
 
     public MockCloudAppendBlobWrapper(URI uri, HashMap<String, String> metadata,
         int length) {
       super(uri, metadata, length);
     }
 
-      @Override
-      public OutputStream openWriteExisting(AccessCondition accessCondition, BlobRequestOptions options,
+    @Override
+    public OutputStream openWriteExisting(AccessCondition accessCondition,
+        BlobRequestOptions options, OperationContext opContext)
+        throws StorageException {
+      throw new UnsupportedOperationException(
+          "uploadMetadata not used in Mock Tests");
+    }
+
+    @Override
+    public Long appendBlock(InputStream sourceStream, long length,
+        AccessCondition accessCondition, BlobRequestOptions options,
+        OperationContext opContext) throws StorageException, IOException {
+      throw new UnsupportedOperationException(
+          "uploadMetadata not used in Mock Tests");
+    }
+
+    @Override
+    public void createOrReplace(AccessCondition accessCondition,
+        BlobRequestOptions options, OperationContext opContext)
+        throws StorageException {
+    }
+
+    @Override
+    // This method is inherited from CloudBlobWrapper but needs to be overriden
+    // for compatibility
+    public OutputStream openOutputStream(BlobRequestOptions options,
         OperationContext opContext) throws StorageException {
-          throw new UnsupportedOperationException("uploadMetadata not used in Mock Tests");
-      }
+      throw new UnsupportedOperationException(
+          "uploadMetadata not used in Mock Tests");
+    }
 
-      @Override
-      public Long appendBlock(InputStream sourceStream, long length, AccessCondition accessCondition, BlobRequestOptions options,
-         OperationContext opContext) throws StorageException, IOException {
-          throw new UnsupportedOperationException("uploadMetadata not used in Mock Tests");
-      }
+    @Override
+    public CloudBlob getBlob() {
+      return null;
+    }
 
-      @Override
-      public void createOrReplace(AccessCondition accessCondition, BlobRequestOptions options,
-          OperationContext opContext) throws StorageException {
-      }
+    @Override
+    public void setWriteBlockSizeInBytes(int writeBlockSizeInBytes) {
+    }
 
-      @Override
-      // This method is inherited from CloudBlobWrapper but needs to be overriden for compatibility
-      public OutputStream openOutputStream(
-        BlobRequestOptions options,
-        OperationContext opContext) throws StorageException {
-          throw new UnsupportedOperationException("uploadMetadata not used in Mock Tests");
-      }
+    @Override
+    public StorageUri getStorageUri() {
+      throw new NotImplementedException();
+    }
 
-      @Override
-      public CloudBlob getBlob() {
-        return null;
-      }
+    @Override
+    public void setStreamMinimumReadSizeInBytes(int minimumReadSize) {
+    }
 
-      @Override
-      public void setWriteBlockSizeInBytes(int writeBlockSizeInBytes) {
-      }
+    @Override
+    public SelfRenewingLease acquireLease() {
+      return null;
+    }
 
-      @Override
-      public StorageUri getStorageUri() {
-          throw new NotImplementedException();
-      }
+    @Override
+    public void uploadProperties(OperationContext opContext,
+        SelfRenewingLease lease) throws StorageException {
+    }
 
-      @Override
-      public void setStreamMinimumReadSizeInBytes(int minimumReadSize) {
-      }
-
-      @Override
-      public SelfRenewingLease acquireLease() {
-        return null;
-      }
-
-      @Override
-      public void uploadProperties(OperationContext opContext,
-          SelfRenewingLease lease)
-          throws StorageException {
-      }
-
-      public void uploadMetadata(AccessCondition accessCondition, BlobRequestOptions options,
-        OperationContext opContext) throws StorageException {
-      throw new UnsupportedOperationException("uploadMetadata not used in Mock Tests");
+    public void uploadMetadata(AccessCondition accessCondition,
+        BlobRequestOptions options, OperationContext opContext)
+        throws StorageException {
+      throw new UnsupportedOperationException(
+          "uploadMetadata not used in Mock Tests");
     }
   }
 
-
   class MockCloudPageBlobWrapper extends MockCloudBlobWrapper
-    implements CloudPageBlobWrapper {
+      implements CloudPageBlobWrapper {
     public MockCloudPageBlobWrapper(URI uri, HashMap<String, String> metadata,
         int length) {
       super(uri, metadata, length);
@@ -656,13 +674,12 @@ class MockCloudAppendBlobWrapper extends MockCloudBlobWrapper
 
     @Override
     public StorageUri getStorageUri() {
-        throw new NotImplementedException();
+      throw new NotImplementedException();
     }
 
     @Override
     public void uploadProperties(OperationContext opContext,
-        SelfRenewingLease lease)
-        throws StorageException {
+        SelfRenewingLease lease) throws StorageException {
     }
 
     @Override
@@ -675,9 +692,11 @@ class MockCloudAppendBlobWrapper extends MockCloudBlobWrapper
       return null;
     }
 
-    public void uploadMetadata(AccessCondition accessCondition, BlobRequestOptions options,
-        OperationContext opContext) throws StorageException {
-      throw new UnsupportedOperationException("uploadMetadata not used in Mock Tests");
+    public void uploadMetadata(AccessCondition accessCondition,
+        BlobRequestOptions options, OperationContext opContext)
+        throws StorageException {
+      throw new UnsupportedOperationException(
+          "uploadMetadata not used in Mock Tests");
     }
   }
 }

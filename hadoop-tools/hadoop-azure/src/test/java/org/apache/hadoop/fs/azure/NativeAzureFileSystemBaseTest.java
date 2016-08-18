@@ -72,9 +72,11 @@ public abstract class NativeAzureFileSystemBaseTest {
   private AzureBlobStorageTestAccount testAccount;
   private final long modifiedTimeErrorMargin = 5 * 1000; // Give it +/-5 seconds
 
-  protected abstract AzureBlobStorageTestAccount createTestAccount() throws Exception;
+  protected abstract AzureBlobStorageTestAccount createTestAccount()
+      throws Exception;
 
-  public static final Log LOG = LogFactory.getLog(NativeAzureFileSystemBaseTest.class);
+  public static final Log LOG = LogFactory
+      .getLog(NativeAzureFileSystemBaseTest.class);
 
   @Before
   public void setUp() throws Exception {
@@ -155,8 +157,8 @@ public abstract class NativeAzureFileSystemBaseTest {
   }
 
   private static FsPermission ignoreStickyBit(FsPermission original) {
-    return new FsPermission(original.getUserAction(),
-        original.getGroupAction(), original.getOtherAction());
+    return new FsPermission(original.getUserAction(), original.getGroupAction(),
+        original.getOtherAction());
   }
 
   // When FsPermission applies a UMask, it loses sticky bit information.
@@ -187,21 +189,26 @@ public abstract class NativeAzureFileSystemBaseTest {
     fs.delete(testFolder, true);
   }
 
-  void testDeepFileCreationBase(String testFilePath, String firstDirPath, String middleDirPath,
-          short permissionShort, short umaskedPermissionShort) throws Exception  {
+  void testDeepFileCreationBase(String testFilePath, String firstDirPath,
+      String middleDirPath, short permissionShort, short umaskedPermissionShort)
+      throws Exception {
     Path testFile = new Path(testFilePath);
     Path firstDir = new Path(firstDirPath);
     Path middleDir = new Path(middleDirPath);
     FsPermission permission = FsPermission.createImmutable(permissionShort);
-    FsPermission umaskedPermission = FsPermission.createImmutable(umaskedPermissionShort);
+    FsPermission umaskedPermission = FsPermission
+        .createImmutable(umaskedPermissionShort);
 
     createEmptyFile(testFile, permission);
-    FsPermission rootPerm = fs.getFileStatus(firstDir.getParent()).getPermission();
-    FsPermission inheritPerm = FsPermission.createImmutable((short)(rootPerm.toShort() | 0300));
+    FsPermission rootPerm = fs.getFileStatus(firstDir.getParent())
+        .getPermission();
+    FsPermission inheritPerm = FsPermission
+        .createImmutable((short) (rootPerm.toShort() | 0300));
     assertTrue(fs.exists(testFile));
     assertTrue(fs.exists(firstDir));
     assertTrue(fs.exists(middleDir));
-    // verify that the indirectly created directory inherited its permissions from the root directory
+    // verify that the indirectly created directory inherited its permissions
+    // from the root directory
     FileStatus directoryStatus = fs.getFileStatus(middleDir);
     assertTrue(directoryStatus.isDirectory());
     assertEqualsIgnoreStickyBit(inheritPerm, directoryStatus.getPermission());
@@ -220,17 +227,23 @@ public abstract class NativeAzureFileSystemBaseTest {
   @Test
   public void testDeepFileCreation() throws Exception {
     // normal permissions in user home
-    testDeepFileCreationBase("deep/file/creation/test", "deep", "deep/file/creation", (short)0644, (short)0644);
+    testDeepFileCreationBase("deep/file/creation/test", "deep",
+        "deep/file/creation", (short) 0644, (short) 0644);
     // extra permissions in user home. umask will change the actual permissions.
-    testDeepFileCreationBase("deep/file/creation/test", "deep", "deep/file/creation", (short)0777, (short)0755);
+    testDeepFileCreationBase("deep/file/creation/test", "deep",
+        "deep/file/creation", (short) 0777, (short) 0755);
     // normal permissions in root
-    testDeepFileCreationBase("/deep/file/creation/test", "/deep", "/deep/file/creation", (short)0644, (short)0644);
+    testDeepFileCreationBase("/deep/file/creation/test", "/deep",
+        "/deep/file/creation", (short) 0644, (short) 0644);
     // less permissions in root
-    testDeepFileCreationBase("/deep/file/creation/test", "/deep", "/deep/file/creation", (short)0700, (short)0700);
+    testDeepFileCreationBase("/deep/file/creation/test", "/deep",
+        "/deep/file/creation", (short) 0700, (short) 0700);
     // one indirectly created directory in root
-    testDeepFileCreationBase("/deep/file", "/deep", "/deep", (short)0644, (short)0644);
+    testDeepFileCreationBase("/deep/file", "/deep", "/deep", (short) 0644,
+        (short) 0644);
     // one indirectly created directory in user home
-    testDeepFileCreationBase("deep/file", "deep", "deep", (short)0644, (short)0644);
+    testDeepFileCreationBase("deep/file", "deep", "deep", (short) 0644,
+        (short) 0644);
   }
 
   private static enum RenameVariation {
@@ -243,20 +256,20 @@ public abstract class NativeAzureFileSystemBaseTest {
       System.out.printf("Rename variation: %s\n", variation);
       Path originalFile;
       switch (variation) {
-        case NormalFileName:
-          originalFile = new Path("fileToRename");
-          break;
-        case SourceInAFolder:
-          originalFile = new Path("file/to/rename");
-          break;
-        case SourceWithSpace:
-          originalFile = new Path("file to rename");
-          break;
-        case SourceWithPlusAndPercent:
-          originalFile = new Path("file+to%rename");
-          break;
-        default:
-          throw new Exception("Unknown variation");
+      case NormalFileName:
+        originalFile = new Path("fileToRename");
+        break;
+      case SourceInAFolder:
+        originalFile = new Path("file/to/rename");
+        break;
+      case SourceWithSpace:
+        originalFile = new Path("file to rename");
+        break;
+      case SourceWithPlusAndPercent:
+        originalFile = new Path("file+to%rename");
+        break;
+      default:
+        throw new Exception("Unknown variation");
       }
       Path destinationFile = new Path("file/resting/destination");
       assertTrue(fs.createNewFile(originalFile));
@@ -277,10 +290,12 @@ public abstract class NativeAzureFileSystemBaseTest {
     Path testFile = new Path("deep/file/rename/test");
     FsPermission permission = FsPermission.createImmutable((short) 644);
     createEmptyFile(testFile, permission);
-    boolean renameResult = fs.rename(new Path("deep/file"), new Path("deep/renamed"));
+    boolean renameResult = fs.rename(new Path("deep/file"),
+        new Path("deep/renamed"));
     assertTrue(renameResult);
     assertFalse(fs.exists(testFile));
-    FileStatus newStatus = fs.getFileStatus(new Path("deep/renamed/rename/test"));
+    FileStatus newStatus = fs
+        .getFileStatus(new Path("deep/renamed/rename/test"));
     assertNotNull(newStatus);
     assertEqualsIgnoreStickyBit(permission, newStatus.getPermission());
     assertTrue(fs.delete(new Path("deep"), true));
@@ -319,8 +334,8 @@ public abstract class NativeAzureFileSystemBaseTest {
 
   @Test
   public void testCopyFromLocalFileSystem() throws Exception {
-    Path localFilePath = new Path(System.getProperty("test.build.data",
-        "azure_test"));
+    Path localFilePath = new Path(
+        System.getProperty("test.build.data", "azure_test"));
     FileSystem localFs = FileSystem.get(new Configuration());
     localFs.delete(localFilePath, true);
     try {
@@ -437,7 +452,8 @@ public abstract class NativeAzureFileSystemBaseTest {
     FileStatus[] listing = fs.listStatus(new Path(targetDirectoryName));
     assertEquals(1, listing.length);
     assertEquals(fileName, listing[0].getPath().getName());
-    FileStatus status = fs.getFileStatus(new Path(targetDirectoryName, fileName));
+    FileStatus status = fs
+        .getFileStatus(new Path(targetDirectoryName, fileName));
     assertEquals(fileName, status.getPath().getName());
     assertTrue(fs.delete(new Path(targetDirectoryName, fileName), true));
     assertTrue(fs.delete(new Path(targetDirectoryName), true));
@@ -481,7 +497,8 @@ public abstract class NativeAzureFileSystemBaseTest {
   }
 
   @Test
-  public void testInputStreamReadWithBufferReturnsMinusOneOnEof() throws Exception {
+  public void testInputStreamReadWithBufferReturnsMinusOneOnEof()
+      throws Exception {
     Path newFile = new Path("eofRead");
     OutputStream output = fs.create(newFile);
     output.write(10);
@@ -503,12 +520,13 @@ public abstract class NativeAzureFileSystemBaseTest {
   }
 
   @Test
-  public void testInputStreamReadWithBufferReturnsMinusOneOnEofForLargeBuffer() throws Exception {
+  public void testInputStreamReadWithBufferReturnsMinusOneOnEofForLargeBuffer()
+      throws Exception {
     Path newFile = new Path("eofRead2");
     OutputStream output = fs.create(newFile);
     byte[] outputBuff = new byte[97331];
-    for(int i = 0; i < outputBuff.length; ++i) {
-      outputBuff[i] = (byte)(Math.random() * 255);
+    for (int i = 0; i < outputBuff.length; ++i) {
+      outputBuff[i] = (byte) (Math.random() * 255);
     }
     output.write(outputBuff);
     output.close();
@@ -518,7 +536,7 @@ public abstract class NativeAzureFileSystemBaseTest {
     byte[] buff = new byte[131072];
     int result = input.read(buff, 0, buff.length);
     assertEquals(outputBuff.length, result);
-    for(int i = 0; i < outputBuff.length; ++i) {
+    for (int i = 0; i < outputBuff.length; ++i) {
       assertEquals(outputBuff[i], buff[i]);
     }
 
@@ -591,7 +609,8 @@ public abstract class NativeAzureFileSystemBaseTest {
     assertEquals("newUser", newStatus.getOwner());
     assertEquals("supergroup", newStatus.getGroup());
 
-    // File length is only reported to be the size of bytes written to the file for block blobs.
+    // File length is only reported to be the size of bytes written to the file
+    // for block blobs.
     // So only check it for block blobs, not page blobs.
     if (!(this instanceof TestNativeAzureFSPageBlobLive)) {
       assertEquals(1, newStatus.getLen());
@@ -673,9 +692,9 @@ public abstract class NativeAzureFileSystemBaseTest {
   }
 
   /**
-   * Verify we can get file status of a directory with various forms of
-   * the directory file name, including the nonstandard but legal form
-   * ending in "/.". Check that we're getting status for a directory.
+   * Verify we can get file status of a directory with various forms of the
+   * directory file name, including the nonstandard but legal form ending in
+   * "/.". Check that we're getting status for a directory.
    */
   @Test
   public void testListSlash() throws Exception {
@@ -698,29 +717,26 @@ public abstract class NativeAzureFileSystemBaseTest {
     // Verify that the page blob directory list configuration setting
     // is not set in the default configuration.
     Configuration conf = new Configuration();
-    String[] rawPageBlobDirs =
-        conf.getStrings(AzureNativeFileSystemStore.KEY_PAGE_BLOB_DIRECTORIES);
+    String[] rawPageBlobDirs = conf
+        .getStrings(AzureNativeFileSystemStore.KEY_PAGE_BLOB_DIRECTORIES);
     assertTrue(rawPageBlobDirs == null);
   }
 
   /*
-   * Set up a situation where a folder rename is partway finished.
-   * Then apply redo to finish the rename.
+   * Set up a situation where a folder rename is partway finished. Then apply
+   * redo to finish the rename.
    *
-   * The original source folder *would* have had contents
-   * folderToRename  (0 byte dummy file for directory)
-   * folderToRename/innerFile
+   * The original source folder *would* have had contents folderToRename (0 byte
+   * dummy file for directory) folderToRename/innerFile
    * folderToRename/innerFile2
    *
    * The actual source folder (after partial rename and failure)
    *
-   * folderToRename
-   * folderToRename/innerFile2
+   * folderToRename folderToRename/innerFile2
    *
    * The actual target folder (after partial rename and failure)
    *
-   * renamedFolder
-   * renamedFolder/innerFile
+   * renamedFolder renamedFolder/innerFile
    */
   @Test
   public void testRedoRenameFolder() throws IOException {
@@ -738,11 +754,9 @@ public abstract class NativeAzureFileSystemBaseTest {
     // propose (but don't do) the rename
     Path home = fs.getHomeDirectory();
     String relativeHomeDir = getRelativePath(home.toString());
-    NativeAzureFileSystem.FolderRenamePending pending =
-        new NativeAzureFileSystem.FolderRenamePending(
-            relativeHomeDir + "/" + srcKey,
-            relativeHomeDir + "/" + dstKey, null,
-            (NativeAzureFileSystem) fs);
+    NativeAzureFileSystem.FolderRenamePending pending = new NativeAzureFileSystem.FolderRenamePending(
+        relativeHomeDir + "/" + srcKey, relativeHomeDir + "/" + dstKey, null,
+        (NativeAzureFileSystem) fs);
 
     // get the rename pending file contents
     String renameDescription = pending.makeRenamePendingFileContents();
@@ -764,8 +778,10 @@ public abstract class NativeAzureFileSystemBaseTest {
     assertTrue(out != null);
     writeString(out, renameDescription);
 
-    // Redo the rename operation based on the contents of the -RenamePending.json file.
-    // Trigger the redo by checking for existence of the original folder. It must appear
+    // Redo the rename operation based on the contents of the
+    // -RenamePending.json file.
+    // Trigger the redo by checking for existence of the original folder. It
+    // must appear
     // to not exist.
     assertFalse(fs.exists(originalFolder));
 
@@ -792,9 +808,9 @@ public abstract class NativeAzureFileSystemBaseTest {
   }
 
   /**
-   * If there is a folder to be renamed inside a parent folder,
-   * then when you list the parent folder, you should only see
-   * the final result, after the rename.
+   * If there is a folder to be renamed inside a parent folder, then when you
+   * list the parent folder, you should only see the final result, after the
+   * rename.
    */
   @Test
   public void testRedoRenameFolderInFolderListing() throws IOException {
@@ -815,11 +831,9 @@ public abstract class NativeAzureFileSystemBaseTest {
     // propose (but don't do) the rename of innerFolder2
     Path home = fs.getHomeDirectory();
     String relativeHomeDir = getRelativePath(home.toString());
-    NativeAzureFileSystem.FolderRenamePending pending =
-        new NativeAzureFileSystem.FolderRenamePending(
-            relativeHomeDir + "/" + inner2,
-            relativeHomeDir + "/" + inner2renamed, null,
-            (NativeAzureFileSystem) fs);
+    NativeAzureFileSystem.FolderRenamePending pending = new NativeAzureFileSystem.FolderRenamePending(
+        relativeHomeDir + "/" + inner2, relativeHomeDir + "/" + inner2renamed,
+        null, (NativeAzureFileSystem) fs);
 
     // Create a rename-pending file and write rename information to it.
     final String renamePendingStr = inner2 + FolderRenamePending.SUFFIX;
@@ -844,8 +858,8 @@ public abstract class NativeAzureFileSystemBaseTest {
   }
 
   /**
-   * There is a nested folder and file under the folder to be renamed
-   * and the process crashes after the nested folder has been renamed but not the file.
+   * There is a nested folder and file under the folder to be renamed and the
+   * process crashes after the nested folder has been renamed but not the file.
    * then when you list the parent folder, pending renames should be redone
    * Apache jira HADOOP-12780
    */
@@ -870,14 +884,14 @@ public abstract class NativeAzureFileSystemBaseTest {
     // propose (but don't do) the rename of innerFolder2
     Path home = fs.getHomeDirectory();
     String relativeHomeDir = getRelativePath(home.toString());
-    NativeAzureFileSystem.FolderRenamePending pending =
-        new NativeAzureFileSystem.FolderRenamePending(
-            relativeHomeDir + "/" + folderToBeRenamed,
-            relativeHomeDir + "/" + renamedFolder, null,
-            (NativeAzureFileSystem) fs);
+    NativeAzureFileSystem.FolderRenamePending pending = new NativeAzureFileSystem.FolderRenamePending(
+        relativeHomeDir + "/" + folderToBeRenamed,
+        relativeHomeDir + "/" + renamedFolder, null,
+        (NativeAzureFileSystem) fs);
 
     // Create a rename-pending file and write rename information to it.
-    final String renamePendingStr = folderToBeRenamed + FolderRenamePending.SUFFIX;
+    final String renamePendingStr = folderToBeRenamed
+        + FolderRenamePending.SUFFIX;
     Path renamePendingFile = new Path(renamePendingStr);
     FSDataOutputStream out = fs.create(renamePendingFile, true);
     assertTrue(out != null);
@@ -886,14 +900,22 @@ public abstract class NativeAzureFileSystemBaseTest {
     // Rename inner folder to simulate the scenario where rename has started and
     // only one directory has been renamed but not the files under it
     ((NativeAzureFileSystem) fs).getStoreInterface().rename(
-        relativeHomeDir + "/" +inner, relativeHomeDir + "/" +renamedFolder + "/" + innerFolderName , true, null);
+        relativeHomeDir + "/" + inner,
+        relativeHomeDir + "/" + renamedFolder + "/" + innerFolderName, true,
+        null);
 
-    // Instead of using fs.exist use store.explicitFileExists because fs.exist will return true
-    // even if directory has been renamed, but there are still file under that directory
-    assertFalse(((NativeAzureFileSystem) fs).getStoreInterface().
-        explicitFileExists(relativeHomeDir + "/" + inner)); // verify the explicit inner folder is gone
-    assertTrue(((NativeAzureFileSystem) fs).getStoreInterface().
-        explicitFileExists(relativeHomeDir + "/" + innerFile)); // verify inner file is present
+    // Instead of using fs.exist use store.explicitFileExists because fs.exist
+    // will return true
+    // even if directory has been renamed, but there are still file under that
+    // directory
+    assertFalse(((NativeAzureFileSystem) fs).getStoreInterface()
+        .explicitFileExists(relativeHomeDir + "/" + inner)); // verify the
+                                                             // explicit inner
+                                                             // folder is gone
+    assertTrue(((NativeAzureFileSystem) fs).getStoreInterface()
+        .explicitFileExists(relativeHomeDir + "/" + innerFile)); // verify inner
+                                                                 // file is
+                                                                 // present
 
     // Redo the rename operation based on the contents of the
     // -RenamePending.json file. Trigger the redo by checking for existence of
@@ -907,17 +929,17 @@ public abstract class NativeAzureFileSystemBaseTest {
     assertFalse(fs.exists(inner)); // verify original folder is gone
     assertFalse(fs.exists(innerFile)); // verify original file is gone
     assertTrue(fs.exists(renamedFolder)); // verify the target is there
-    assertTrue(fs.exists(new Path(renamedFolder, innerFolderName + "/" + innerFileName)));
+    assertTrue(fs.exists(
+        new Path(renamedFolder, innerFolderName + "/" + innerFileName)));
   }
 
   /**
-   * Test the situation when the rename metadata file is empty
-   * i.e. it is created but not written yet. In that case in next rename
-   * this empty file should be deleted. As zero byte metadata file means
-   * rename has not started yet. This is to emulate the scenario where
-   * the process crashes just after creating rename metadata file.
-   *  We had a bug (HADOOP-12678) that in that case listing used to fail and
-   * hbase master did not use to come up
+   * Test the situation when the rename metadata file is empty i.e. it is
+   * created but not written yet. In that case in next rename this empty file
+   * should be deleted. As zero byte metadata file means rename has not started
+   * yet. This is to emulate the scenario where the process crashes just after
+   * creating rename metadata file. We had a bug (HADOOP-12678) that in that
+   * case listing used to fail and hbase master did not use to come up
    */
   @Test
   public void testRedoRenameFolderInFolderListingWithZeroByteRenameMetadata()
@@ -956,11 +978,9 @@ public abstract class NativeAzureFileSystemBaseTest {
     // deletion should handle that
     Path home = fs.getHomeDirectory();
     String relativeHomeDir = getRelativePath(home.toString());
-    NativeAzureFileSystem.FolderRenamePending pending =
-            new NativeAzureFileSystem.FolderRenamePending(
-                relativeHomeDir + "/" + inner2,
-                relativeHomeDir + "/" + inner2renamed, null,
-                (NativeAzureFileSystem) fs);
+    NativeAzureFileSystem.FolderRenamePending pending = new NativeAzureFileSystem.FolderRenamePending(
+        relativeHomeDir + "/" + inner2, relativeHomeDir + "/" + inner2renamed,
+        null, (NativeAzureFileSystem) fs);
     pending.deleteRenamePendingFile(fs, renamePendingFile);
 
     assertTrue(fs.exists(inner2)); // verify original folder is there
@@ -968,10 +988,10 @@ public abstract class NativeAzureFileSystemBaseTest {
   }
 
   /**
-   * Test the situation where a rename pending file exists but the rename
-   * is really done. This could happen if the rename process died just
-   * before deleting the rename pending file. It exercises a non-standard
-   * code path in redo().
+   * Test the situation where a rename pending file exists but the rename is
+   * really done. This could happen if the rename process died just before
+   * deleting the rename pending file. It exercises a non-standard code path in
+   * redo().
    */
   @Test
   public void testRenameRedoFolderAlreadyDone() throws IOException {
@@ -984,11 +1004,9 @@ public abstract class NativeAzureFileSystemBaseTest {
     // propose (but don't do) the rename of innerFolder2
     Path home = fs.getHomeDirectory();
     String relativeHomeDir = getRelativePath(home.toString());
-    NativeAzureFileSystem.FolderRenamePending pending =
-        new NativeAzureFileSystem.FolderRenamePending(
-            relativeHomeDir + "/" + orig,
-            relativeHomeDir + "/" + dest, null,
-            (NativeAzureFileSystem) fs);
+    NativeAzureFileSystem.FolderRenamePending pending = new NativeAzureFileSystem.FolderRenamePending(
+        relativeHomeDir + "/" + orig, relativeHomeDir + "/" + dest, null,
+        (NativeAzureFileSystem) fs);
 
     // Create a rename-pending file and write rename information to it.
     final String renamePendingStr = orig + FolderRenamePending.SUFFIX;
@@ -1010,7 +1028,8 @@ public abstract class NativeAzureFileSystemBaseTest {
   }
 
   @Test
-  public void testRedoFolderRenameAll() throws IllegalArgumentException, IOException {
+  public void testRedoFolderRenameAll()
+      throws IllegalArgumentException, IOException {
     {
       FileFolder original = new FileFolder("folderToRename");
       original.add("innerFile").add("innerFile2");
@@ -1030,8 +1049,8 @@ public abstract class NativeAzureFileSystemBaseTest {
       partialDst.setName("renamedFolder");
 
       // Set up this state before the redo:
-      // folderToRename: file1       file3
-      // renamedFolder:  file1 file2
+      // folderToRename: file1 file3
+      // renamedFolder: file1 file2
       // This gives code coverage for all 3 expected cases for individual file
       // redo.
       partialSrc.setPresent(1, false);
@@ -1067,9 +1086,9 @@ public abstract class NativeAzureFileSystemBaseTest {
     {
       // Do a nested folder, like so:
       // folderToRename:
-      //   nestedFolder: a, b, c
-      //   p
-      //   q
+      // nestedFolder: a, b, c
+      // p
+      // q
       //
       // Then delete file 'a' from the source and add it to destination.
       // Then trigger redo.
@@ -1094,10 +1113,9 @@ public abstract class NativeAzureFileSystemBaseTest {
     }
   }
 
-  private void testRenameRedoFolderSituation(
-      FileFolder fullSrc,
-      FileFolder partialSrc,
-      FileFolder partialDst) throws IllegalArgumentException, IOException {
+  private void testRenameRedoFolderSituation(FileFolder fullSrc,
+      FileFolder partialSrc, FileFolder partialDst)
+      throws IllegalArgumentException, IOException {
 
     // make file folder tree for source
     fullSrc.create();
@@ -1108,7 +1126,8 @@ public abstract class NativeAzureFileSystemBaseTest {
     // prune away some files (as marked) from source to simulate partial rename
     partialSrc.prune();
 
-    // Create only the files indicated for the destination to indicate a partial rename.
+    // Create only the files indicated for the destination to indicate a partial
+    // rename.
     partialDst.create();
 
     // trigger redo
@@ -1151,7 +1170,8 @@ public abstract class NativeAzureFileSystemBaseTest {
       verifyGone(new Path(name), members);
     }
 
-    private void verifyGone(Path prefix, ArrayList<FileFolder> members2) throws IOException {
+    private void verifyGone(Path prefix, ArrayList<FileFolder> members2)
+        throws IOException {
       for (FileFolder f : members2) {
         f.verifyGone(prefix);
       }
@@ -1177,7 +1197,8 @@ public abstract class NativeAzureFileSystemBaseTest {
       verifyExists(new Path(name), members);
     }
 
-    private void verifyExists(Path prefix, ArrayList<FileFolder> members2) throws IOException {
+    private void verifyExists(Path prefix, ArrayList<FileFolder> members2)
+        throws IOException {
       for (FileFolder f : members2) {
         f.verifyExists(prefix);
       }
@@ -1209,11 +1230,10 @@ public abstract class NativeAzureFileSystemBaseTest {
       // Propose (but don't do) the rename.
       Path home = fs.getHomeDirectory();
       String relativeHomeDir = getRelativePath(home.toString());
-      NativeAzureFileSystem.FolderRenamePending pending =
-          new NativeAzureFileSystem.FolderRenamePending(
-              relativeHomeDir + "/" + this.getName(),
-              relativeHomeDir + "/" + dst.getName(), null,
-              (NativeAzureFileSystem) fs);
+      NativeAzureFileSystem.FolderRenamePending pending = new NativeAzureFileSystem.FolderRenamePending(
+          relativeHomeDir + "/" + this.getName(),
+          relativeHomeDir + "/" + dst.getName(), null,
+          (NativeAzureFileSystem) fs);
 
       // Get the rename pending file contents.
       String renameDescription = pending.makeRenamePendingFileContents();
@@ -1267,7 +1287,8 @@ public abstract class NativeAzureFileSystemBaseTest {
       return this;
     }
 
-    // Add a leaf file (by convention, if you pass a string argument, you get a leaf).
+    // Add a leaf file (by convention, if you pass a string argument, you get a
+    // leaf).
     FileFolder add(String file) {
       FileFolder leaf = makeLeaf(file);
       members.add(leaf);
@@ -1291,7 +1312,8 @@ public abstract class NativeAzureFileSystemBaseTest {
       create(null);
     }
 
-    private void create(Path prefix) throws IllegalArgumentException, IOException {
+    private void create(Path prefix)
+        throws IllegalArgumentException, IOException {
       if (isFolder()) {
         if (present) {
           assertTrue(fs.mkdirs(makePath(prefix, name)));
@@ -1306,7 +1328,8 @@ public abstract class NativeAzureFileSystemBaseTest {
       }
     }
 
-    private void create(Path prefix, ArrayList<FileFolder> members2) throws IllegalArgumentException, IOException {
+    private void create(Path prefix, ArrayList<FileFolder> members2)
+        throws IllegalArgumentException, IOException {
       for (FileFolder f : members2) {
         f.create(prefix);
       }
@@ -1345,7 +1368,8 @@ public abstract class NativeAzureFileSystemBaseTest {
   }
 
   private String getRelativePath(String path) {
-    // example input: wasb://wasbtests-ehans-1404322046279@ehans9.blob.core.windows.net/user/ehans/folderToRename
+    // example input:
+    // wasb://wasbtests-ehans-1404322046279@ehans9.blob.core.windows.net/user/ehans/folderToRename
     // example result: user/ehans/folderToRename
 
     // Find the third / position and return input substring after that.
@@ -1359,12 +1383,13 @@ public abstract class NativeAzureFileSystemBaseTest {
         }
       }
     }
-    throw new RuntimeException("Incorrect path prefix -- expected wasb://.../...");
+    throw new RuntimeException(
+        "Incorrect path prefix -- expected wasb://.../...");
   }
 
   @Test
   public void testCloseFileSystemTwice() throws Exception {
-    //make sure close() can be called multiple times without doing any harm
+    // make sure close() can be called multiple times without doing any harm
     fs.close();
     fs.close();
   }
@@ -1376,6 +1401,7 @@ public abstract class NativeAzureFileSystemBaseTest {
                                        // to exercise that case.
   int MAX_STRIDE = FILE_SIZE + 1;
   Path PATH = new Path("/available.dat");
+
   @Test
   public void testAvailable() throws IOException {
 
@@ -1405,15 +1431,15 @@ public abstract class NativeAzureFileSystemBaseTest {
       byte[] inputBuffer = new byte[MAX_STRIDE];
       int position = 0;
       int bytesRead = 0;
-      while(bytesRead != FILE_SIZE) {
+      while (bytesRead != FILE_SIZE) {
         bytesRead += in.read(inputBuffer, position, readStride);
         int available = in.available();
         if (bytesRead < FILE_SIZE) {
           if (available < 1) {
             fail(String.format(
-                  "expected available > 0 but got: "
-                      + "position = %d, bytesRead = %d, in.available() = %d",
-                  position, bytesRead, available));
+                "expected available > 0 but got: "
+                    + "position = %d, bytesRead = %d, in.available() = %d",
+                position, bytesRead, available));
           }
         }
       }
@@ -1451,7 +1477,8 @@ public abstract class NativeAzureFileSystemBaseTest {
     FileStatus fileStatus = fs.getFileStatus(testPath);
     final long errorMargin = modifiedTimeErrorMargin;
     long lastModified = fileStatus.getModificationTime();
-    return (lastModified > (time - errorMargin) && lastModified < (time + errorMargin));
+    return (lastModified > (time - errorMargin)
+        && lastModified < (time + errorMargin));
   }
 
   @Test
@@ -1459,13 +1486,12 @@ public abstract class NativeAzureFileSystemBaseTest {
     Path testFolder = new Path("/testFolder");
     Path testFile = new Path(testFolder, "testFile");
     try {
-      fs.createNonRecursive(testFile, true, 1024, (short)1, 1024, null);
+      fs.createNonRecursive(testFile, true, 1024, (short) 1, 1024, null);
       assertTrue("Should've thrown", false);
     } catch (FileNotFoundException e) {
     }
     fs.mkdirs(testFolder);
-    fs.createNonRecursive(testFile, true, 1024, (short)1, 1024, null)
-      .close();
+    fs.createNonRecursive(testFile, true, 1024, (short) 1, 1024, null).close();
     assertTrue(fs.exists(testFile));
   }
 
@@ -1479,16 +1505,18 @@ public abstract class NativeAzureFileSystemBaseTest {
     assertEquals(1, listed.length);
     assertEquals("testFile.", listed[0].getPath().getName());
   }
+
   private void testModifiedTime(Path testPath) throws Exception {
     Calendar utc = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
     long currentUtcTime = utc.getTime().getTime();
     FileStatus fileStatus = fs.getFileStatus(testPath);
     final long errorMargin = 10 * 1000; // Give it +/-10 seconds
-    assertTrue("Modification time " +
-        new Date(fileStatus.getModificationTime()) + " is not close to now: " +
-        utc.getTime(),
-        fileStatus.getModificationTime() > (currentUtcTime - errorMargin) &&
-        fileStatus.getModificationTime() < (currentUtcTime + errorMargin));
+    assertTrue(
+        "Modification time " + new Date(fileStatus.getModificationTime())
+            + " is not close to now: " + utc.getTime(),
+        fileStatus.getModificationTime() > (currentUtcTime - errorMargin)
+            && fileStatus
+                .getModificationTime() < (currentUtcTime + errorMargin));
   }
 
   private void createEmptyFile(Path testFile, FsPermission permission)
@@ -1510,8 +1538,8 @@ public abstract class NativeAzureFileSystemBaseTest {
   }
 
   private String readString(FSDataInputStream inputStream) throws IOException {
-    BufferedReader reader = new BufferedReader(new InputStreamReader(
-        inputStream));
+    BufferedReader reader = new BufferedReader(
+        new InputStreamReader(inputStream));
     final int BUFFER_SIZE = 1024;
     char[] buffer = new char[BUFFER_SIZE];
     int count = reader.read(buffer, 0, BUFFER_SIZE);
@@ -1534,8 +1562,8 @@ public abstract class NativeAzureFileSystemBaseTest {
 
   private void writeString(FSDataOutputStream outputStream, String value)
       throws IOException {
-    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
-        outputStream));
+    BufferedWriter writer = new BufferedWriter(
+        new OutputStreamWriter(outputStream));
     writer.write(value);
     writer.close();
   }
@@ -1543,8 +1571,8 @@ public abstract class NativeAzureFileSystemBaseTest {
   @Test
   // Acquire and free a Lease object. Wait for more than the lease
   // timeout, to make sure the lease renews itself.
-  public void testSelfRenewingLease() throws IllegalArgumentException, IOException,
-    InterruptedException, StorageException {
+  public void testSelfRenewingLease() throws IllegalArgumentException,
+      IOException, InterruptedException, StorageException {
 
     SelfRenewingLease lease;
     final String FILE_KEY = "file";
@@ -1574,7 +1602,8 @@ public abstract class NativeAzureFileSystemBaseTest {
       fail("Caught exception trying to directly re-acquire lease from Azure");
     } finally {
       assertTrue(differentLeaseID != null);
-      AccessCondition accessCondition = AccessCondition.generateEmptyCondition();
+      AccessCondition accessCondition = AccessCondition
+          .generateEmptyCondition();
       accessCondition.setLeaseID(differentLeaseID);
       blob.releaseLease(accessCondition);
     }
@@ -1585,9 +1614,8 @@ public abstract class NativeAzureFileSystemBaseTest {
   // timeout, to make sure the lease renews itself. Delete the file.
   // That will automatically free the lease.
   // (that should work without any failures).
-  public void testSelfRenewingLeaseFileDelete()
-      throws IllegalArgumentException, IOException,
-        InterruptedException, StorageException {
+  public void testSelfRenewingLeaseFileDelete() throws IllegalArgumentException,
+      IOException, InterruptedException, StorageException {
 
     SelfRenewingLease lease;
     final String FILE_KEY = "file";
@@ -1619,12 +1647,13 @@ public abstract class NativeAzureFileSystemBaseTest {
   // Then the first one will free the lease and the second
   // one will get it and proceed.
   @Test
-  public void testLeaseAsDistributedLock() throws IllegalArgumentException,
-      IOException {
+  public void testLeaseAsDistributedLock()
+      throws IllegalArgumentException, IOException {
     final String LEASE_LOCK_FILE_KEY = "file";
     fs.create(new Path(LEASE_LOCK_FILE_KEY));
     NativeAzureFileSystem nfs = (NativeAzureFileSystem) fs;
-    String fullKey = nfs.pathToKey(nfs.makeAbsolute(new Path(LEASE_LOCK_FILE_KEY)));
+    String fullKey = nfs
+        .pathToKey(nfs.makeAbsolute(new Path(LEASE_LOCK_FILE_KEY)));
 
     Thread first = new Thread(new LeaseLockAction("first-thread", fullKey));
     first.start();
@@ -1632,7 +1661,7 @@ public abstract class NativeAzureFileSystemBaseTest {
     second.start();
     try {
 
-      // Wait for the two  threads to finish.
+      // Wait for the two threads to finish.
       first.join();
       second.join();
       assertTrue(firstEndTime < secondStartTime);

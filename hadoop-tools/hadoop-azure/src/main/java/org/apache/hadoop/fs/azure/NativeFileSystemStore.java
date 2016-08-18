@@ -39,7 +39,8 @@ import com.google.common.annotations.VisibleForTesting;
 @InterfaceAudience.Private
 interface NativeFileSystemStore {
 
-  void initialize(URI uri, Configuration conf, AzureFileSystemInstrumentation instrumentation) throws IOException;
+  void initialize(URI uri, Configuration conf,
+      AzureFileSystemInstrumentation instrumentation) throws IOException;
 
   void storeEmptyFolder(String key, PermissionStatus permissionStatus)
       throws AzureException;
@@ -80,8 +81,8 @@ interface NativeFileSystemStore {
 
   void rename(String srcKey, String dstKey) throws IOException;
 
-  void rename(String srcKey, String dstKey, boolean acquireLease, SelfRenewingLease existingLease)
-      throws IOException;
+  void rename(String srcKey, String dstKey, boolean acquireLease,
+      SelfRenewingLease existingLease) throws IOException;
 
   /**
    * Delete all keys with the given prefix. Used for testing.
@@ -107,10 +108,11 @@ interface NativeFileSystemStore {
       SelfRenewingLease folderLease) throws AzureException;
 
   void delete(String key, SelfRenewingLease lease) throws IOException;
-      
+
   SelfRenewingLease acquireLease(String key) throws AzureException;
 
-  DataOutputStream retrieveAppendStream(String key, int bufferSize) throws IOException;
+  DataOutputStream retrieveAppendStream(String key, int bufferSize)
+      throws IOException;
 
   boolean explicitFileExists(String key) throws AzureException;
 }

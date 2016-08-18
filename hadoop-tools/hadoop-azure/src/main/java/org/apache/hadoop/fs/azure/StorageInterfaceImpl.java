@@ -63,15 +63,16 @@ class StorageInterfaceImpl extends StorageInterface {
   private CloudBlobClient serviceClient;
 
   @Override
-  public void setRetryPolicyFactory(final RetryPolicyFactory retryPolicyFactory) {
-    serviceClient.getDefaultRequestOptions().setRetryPolicyFactory(
-            retryPolicyFactory);
+  public void setRetryPolicyFactory(
+      final RetryPolicyFactory retryPolicyFactory) {
+    serviceClient.getDefaultRequestOptions()
+        .setRetryPolicyFactory(retryPolicyFactory);
   }
 
   @Override
   public void setTimeoutInMs(int timeoutInMs) {
-    serviceClient.getDefaultRequestOptions().setTimeoutIntervalInMs(
-            timeoutInMs);
+    serviceClient.getDefaultRequestOptions()
+        .setTimeoutIntervalInMs(timeoutInMs);
   }
 
   @Override
@@ -135,13 +136,14 @@ class StorageInterfaceImpl extends StorageInterface {
     public ListBlobItem next() {
       ListBlobItem unwrapped = present.next();
       if (unwrapped instanceof CloudBlobDirectory) {
-        return new CloudBlobDirectoryWrapperImpl((CloudBlobDirectory) unwrapped);
+        return new CloudBlobDirectoryWrapperImpl(
+            (CloudBlobDirectory) unwrapped);
       } else if (unwrapped instanceof CloudBlockBlob) {
         return new CloudBlockBlobWrapperImpl((CloudBlockBlob) unwrapped);
       } else if (unwrapped instanceof CloudPageBlob) {
         return new CloudPageBlobWrapperImpl((CloudPageBlob) unwrapped);
       } else if (unwrapped instanceof CloudAppendBlob) {
-          return new CloudAppendBlobWrapperImpl((CloudAppendBlob) unwrapped);
+        return new CloudAppendBlobWrapperImpl((CloudAppendBlob) unwrapped);
       } else {
         return unwrapped;
       }
@@ -180,14 +182,14 @@ class StorageInterfaceImpl extends StorageInterface {
     }
 
     @Override
-    public CloudBlobContainer getContainer() throws URISyntaxException,
-        StorageException {
+    public CloudBlobContainer getContainer()
+        throws URISyntaxException, StorageException {
       return directory.getContainer();
     }
 
     @Override
-    public CloudBlobDirectory getParent() throws URISyntaxException,
-        StorageException {
+    public CloudBlobDirectory getParent()
+        throws URISyntaxException, StorageException {
       return directory.getParent();
     }
 
@@ -260,9 +262,10 @@ class StorageInterfaceImpl extends StorageInterface {
     @Override
     public CloudBlobWrapper getBlockBlobReference(String relativePath)
         throws URISyntaxException, StorageException {
-      return new CloudBlockBlobWrapperImpl(container.getBlockBlobReference(relativePath));
+      return new CloudBlockBlobWrapperImpl(
+          container.getBlockBlobReference(relativePath));
     }
-    
+
     @Override
     public CloudBlobWrapper getPageBlobReference(String relativePath)
         throws URISyntaxException, StorageException {
@@ -278,7 +281,7 @@ class StorageInterfaceImpl extends StorageInterface {
     }
 
   }
-  
+
   abstract static class CloudBlobWrapperImpl implements CloudBlobWrapper {
     private final CloudBlob blob;
 
@@ -308,26 +311,26 @@ class StorageInterfaceImpl extends StorageInterface {
     }
 
     /**
-     * Return and access condition for this lease, or else null if
-     * there's no lease.
+     * Return and access condition for this lease, or else null if there's no
+     * lease.
      */
     private AccessCondition getLeaseCondition(SelfRenewingLease lease) {
       AccessCondition leaseCondition = null;
       if (lease != null) {
-        leaseCondition = AccessCondition.generateLeaseCondition(lease.getLeaseID());
+        leaseCondition = AccessCondition
+            .generateLeaseCondition(lease.getLeaseID());
       }
       return leaseCondition;
     }
 
     @Override
-    public boolean exists(OperationContext opContext)
-        throws StorageException {
+    public boolean exists(OperationContext opContext) throws StorageException {
       return getBlob().exists(null, null, opContext);
     }
 
     @Override
-    public void downloadAttributes(
-        OperationContext opContext) throws StorageException {
+    public void downloadAttributes(OperationContext opContext)
+        throws StorageException {
       getBlob().downloadAttributes(null, null, opContext);
     }
 
@@ -342,16 +345,15 @@ class StorageInterfaceImpl extends StorageInterface {
     }
 
     @Override
-    public InputStream openInputStream(
-        BlobRequestOptions options,
+    public InputStream openInputStream(BlobRequestOptions options,
         OperationContext opContext) throws StorageException {
       return getBlob().openInputStream(null, options, opContext);
     }
 
-    public OutputStream openOutputStream(
-        BlobRequestOptions options,
+    public OutputStream openOutputStream(BlobRequestOptions options,
         OperationContext opContext) throws StorageException {
-      return ((CloudBlockBlob) getBlob()).openOutputStream(null, options, opContext);
+      return ((CloudBlockBlob) getBlob()).openOutputStream(null, options,
+          opContext);
     }
 
     public void upload(InputStream sourceStream, OperationContext opContext)
@@ -360,14 +362,14 @@ class StorageInterfaceImpl extends StorageInterface {
     }
 
     @Override
-    public CloudBlobContainer getContainer() throws URISyntaxException,
-        StorageException {
+    public CloudBlobContainer getContainer()
+        throws URISyntaxException, StorageException {
       return getBlob().getContainer();
     }
 
     @Override
-    public CloudBlobDirectory getParent() throws URISyntaxException,
-        StorageException {
+    public CloudBlobDirectory getParent()
+        throws URISyntaxException, StorageException {
       return getBlob().getParent();
     }
 
@@ -378,13 +380,14 @@ class StorageInterfaceImpl extends StorageInterface {
     }
 
     @Override
-    public void uploadMetadata(AccessCondition accessConditions, BlobRequestOptions options,
-        OperationContext opContext) throws StorageException{
+    public void uploadMetadata(AccessCondition accessConditions,
+        BlobRequestOptions options, OperationContext opContext)
+        throws StorageException {
       getBlob().uploadMetadata(accessConditions, options, opContext);
     }
 
-    public void uploadProperties(OperationContext opContext, SelfRenewingLease lease)
-        throws StorageException {
+    public void uploadProperties(OperationContext opContext,
+        SelfRenewingLease lease) throws StorageException {
 
       // Include lease in request if lease not null.
       getBlob().uploadProperties(getLeaseCondition(lease), null, opContext);
@@ -411,19 +414,20 @@ class StorageInterfaceImpl extends StorageInterface {
     }
 
     @Override
-    public void startCopyFromBlob(CloudBlobWrapper sourceBlob, BlobRequestOptions options,
-        OperationContext opContext)
-            throws StorageException, URISyntaxException {
-      getBlob().startCopy(sourceBlob.getBlob().getQualifiedUri(),
-          null, null, options, opContext);
+    public void startCopyFromBlob(CloudBlobWrapper sourceBlob,
+        BlobRequestOptions options, OperationContext opContext)
+        throws StorageException, URISyntaxException {
+      getBlob().startCopy(sourceBlob.getBlob().getQualifiedUri(), null, null,
+          options, opContext);
     }
 
     @Override
     public void downloadRange(long offset, long length, OutputStream outStream,
         BlobRequestOptions options, OperationContext opContext)
-            throws StorageException, IOException {
+        throws StorageException, IOException {
 
-      getBlob().downloadRange(offset, length, outStream, null, options, opContext);
+      getBlob().downloadRange(offset, length, outStream, null, options,
+          opContext);
     }
 
     @Override
@@ -431,21 +435,21 @@ class StorageInterfaceImpl extends StorageInterface {
       return new SelfRenewingLease(this);
     }
   }
-  
 
   //
   // CloudBlockBlobWrapperImpl
   //
 
-  static class CloudBlockBlobWrapperImpl extends CloudBlobWrapperImpl implements CloudBlockBlobWrapper {
+  static class CloudBlockBlobWrapperImpl extends CloudBlobWrapperImpl
+      implements CloudBlockBlobWrapper {
     public CloudBlockBlobWrapperImpl(CloudBlockBlob blob) {
       super(blob);
     }
 
-    public OutputStream openOutputStream(
-        BlobRequestOptions options,
+    public OutputStream openOutputStream(BlobRequestOptions options,
         OperationContext opContext) throws StorageException {
-      return ((CloudBlockBlob) getBlob()).openOutputStream(null, options, opContext);
+      return ((CloudBlockBlob) getBlob()).openOutputStream(null, options,
+          opContext);
     }
 
     public void upload(InputStream sourceStream, OperationContext opContext)
@@ -459,66 +463,80 @@ class StorageInterfaceImpl extends StorageInterface {
     }
 
     @Override
-    public List<BlockEntry> downloadBlockList(BlockListingFilter filter, BlobRequestOptions options,
-        OperationContext opContext) throws IOException, StorageException {
-      return ((CloudBlockBlob) getBlob()).downloadBlockList(filter, null, options, opContext);
+    public List<BlockEntry> downloadBlockList(BlockListingFilter filter,
+        BlobRequestOptions options, OperationContext opContext)
+        throws IOException, StorageException {
+      return ((CloudBlockBlob) getBlob()).downloadBlockList(filter, null,
+          options, opContext);
 
     }
 
     @Override
     public void uploadBlock(String blockId, InputStream sourceStream,
-        long length, BlobRequestOptions options,
-        OperationContext opContext) throws IOException, StorageException {
-      ((CloudBlockBlob) getBlob()).uploadBlock(blockId, sourceStream, length, null, options, opContext);
+        long length, BlobRequestOptions options, OperationContext opContext)
+        throws IOException, StorageException {
+      ((CloudBlockBlob) getBlob()).uploadBlock(blockId, sourceStream, length,
+          null, options, opContext);
     }
 
     @Override
-    public void commitBlockList(List<BlockEntry> blockList, AccessCondition accessCondition, BlobRequestOptions options,
+    public void commitBlockList(List<BlockEntry> blockList,
+        AccessCondition accessCondition, BlobRequestOptions options,
         OperationContext opContext) throws IOException, StorageException {
-      ((CloudBlockBlob) getBlob()).commitBlockList(blockList, accessCondition, options, opContext);
+      ((CloudBlockBlob) getBlob()).commitBlockList(blockList, accessCondition,
+          options, opContext);
     }
   }
 
   //
   // CloudAppendBlobWrapperImpl
   //
-    static class CloudAppendBlobWrapperImpl extends CloudBlobWrapperImpl implements CloudAppendBlobWrapper {
+  static class CloudAppendBlobWrapperImpl extends CloudBlobWrapperImpl
+      implements CloudAppendBlobWrapper {
     public CloudAppendBlobWrapperImpl(CloudAppendBlob blob) {
       super(blob);
     }
 
-      @Override
-      public OutputStream openWriteExisting(AccessCondition accessCondition, BlobRequestOptions options,
+    @Override
+    public OutputStream openWriteExisting(AccessCondition accessCondition,
+        BlobRequestOptions options, OperationContext opContext)
+        throws StorageException {
+      return ((CloudAppendBlob) getBlob()).openWriteExisting(accessCondition,
+          options, opContext);
+    }
+
+    @Override
+    public Long appendBlock(InputStream sourceStream, long length,
+        AccessCondition accessCondition, BlobRequestOptions options,
+        OperationContext opContext) throws StorageException, IOException {
+      return ((CloudAppendBlob) getBlob()).appendBlock(sourceStream, length,
+          accessCondition, options, opContext);
+    }
+
+    @Override
+    public void createOrReplace(AccessCondition accessCondition,
+        BlobRequestOptions options, OperationContext opContext)
+        throws StorageException {
+      ((CloudAppendBlob) getBlob()).createOrReplace(accessCondition, options,
+          opContext);
+    }
+
+    @Override
+    // This method is inherited from CloudBlobWrapper but needs to be overridden
+    // for compatibility
+    public OutputStream openOutputStream(BlobRequestOptions options,
         OperationContext opContext) throws StorageException {
-          return ((CloudAppendBlob) getBlob()).openWriteExisting(accessCondition, options, opContext);
-      }
-
-      @Override
-      public Long appendBlock(InputStream sourceStream, long length, AccessCondition accessCondition, BlobRequestOptions options,
-         OperationContext opContext) throws StorageException, IOException {
-          return ((CloudAppendBlob) getBlob()).appendBlock(sourceStream, length, accessCondition, options, opContext);
-      }
-
-      @Override
-      public void createOrReplace(AccessCondition accessCondition, BlobRequestOptions options,
-          OperationContext opContext) throws StorageException {
-            ((CloudAppendBlob) getBlob()).createOrReplace(accessCondition, options, opContext);
-      }
-
-      @Override
-      // This method is inherited from CloudBlobWrapper but needs to be overridden for compatibility
-      public OutputStream openOutputStream(
-        BlobRequestOptions options,
-        OperationContext opContext) throws StorageException {
-         return ((CloudAppendBlob) getBlob()).openWriteNew(null, options, opContext);
-      }
+      return ((CloudAppendBlob) getBlob()).openWriteNew(null, options,
+          opContext);
+    }
   }
 
   //
   // CloudPageBlobWrapperImpl
   //
 
-  static class CloudPageBlobWrapperImpl extends CloudBlobWrapperImpl implements CloudPageBlobWrapper {
+  static class CloudPageBlobWrapperImpl extends CloudBlobWrapperImpl
+      implements CloudPageBlobWrapper {
     public CloudPageBlobWrapperImpl(CloudPageBlob blob) {
       super(blob);
     }
@@ -529,16 +547,16 @@ class StorageInterfaceImpl extends StorageInterface {
     }
 
     public void uploadPages(final InputStream sourceStream, final long offset,
-        final long length, BlobRequestOptions options, OperationContext opContext)
-        throws StorageException, IOException {
-      ((CloudPageBlob) getBlob()).uploadPages(sourceStream, offset, length, null,
-          options, opContext);
+        final long length, BlobRequestOptions options,
+        OperationContext opContext) throws StorageException, IOException {
+      ((CloudPageBlob) getBlob()).uploadPages(sourceStream, offset, length,
+          null, options, opContext);
     }
 
     public ArrayList<PageRange> downloadPageRanges(BlobRequestOptions options,
         OperationContext opContext) throws StorageException {
-      return ((CloudPageBlob) getBlob()).downloadPageRanges(
-          null, options, opContext);
+      return ((CloudPageBlob) getBlob()).downloadPageRanges(null, options,
+          opContext);
     }
   }
 }

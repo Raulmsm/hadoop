@@ -20,19 +20,19 @@ package org.apache.hadoop.fs.azure;
 import org.apache.hadoop.conf.Configuration;
 
 /**
- * Run the base Azure file system tests strictly on append blobs to make sure fundamental
- * operations on append blob files and folders work as expected.
+ * Run the base Azure file system tests strictly on append blobs to make sure
+ * fundamental operations on append blob files and folders work as expected.
  * These operations include create, delete, rename, list, and so on.
  */
-public class TestNativeAzureFSAppendBlobLive extends
-    NativeAzureFileSystemBaseTest {
+public class TestNativeAzureFSAppendBlobLive
+    extends NativeAzureFileSystemBaseTest {
 
   @Override
-  protected AzureBlobStorageTestAccount createTestAccount()
-      throws Exception {
+  protected AzureBlobStorageTestAccount createTestAccount() throws Exception {
     Configuration conf = new Configuration();
 
-    // Configure the page blob directories key so every file created is an append blob.
+    // Configure the page blob directories key so every file created is an
+    // append blob.
     conf.set(AzureNativeFileSystemStore.KEY_APPEND_BLOB_DIRECTORIES, "/");
 
     return AzureBlobStorageTestAccount.create(conf);
