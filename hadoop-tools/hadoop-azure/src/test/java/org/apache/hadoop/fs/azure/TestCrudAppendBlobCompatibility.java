@@ -85,6 +85,8 @@ public class TestCrudAppendBlobCompatibility {
     fs.create(blobToCreate);
     blobStatus = fs.getFileStatus(blobToCreate);
     assertEquals(0, blobStatus.getLen());
+
+    createdBlobOutStream.close();
   }
 
   @Test
@@ -103,10 +105,23 @@ public class TestCrudAppendBlobCompatibility {
     FileStatus blobStatus = fs.getFileStatus(appendBlob);
     assertEquals(fiveMegaBytes, blobStatus.getLen());
 
+    // Read without closing the writer stream intentionally
     FSDataInputStream blobInStream = fs.open(appendBlob);
     byte[] readBytes = new byte[fiveMegaBytes];
     blobInStream.read(readBytes, 0, fiveMegaBytes);
     assertTrue(Arrays.equals(randomBytes, readBytes));
+
+    createdBlobOutStream.close();
+    blobInStream.close();
+
+    // Check that the file stays as-is after closing
+    blobStatus = fs.getFileStatus(appendBlob);
+    assertEquals(fiveMegaBytes, blobStatus.getLen());
+
+    FSDataInputStream reopenBlobStream = fs.open(appendBlob);
+    reopenBlobStream.read(readBytes, 0, fiveMegaBytes);
+    assertTrue(Arrays.equals(randomBytes, readBytes));
+    reopenBlobStream.close();
   }
 
   @Test
@@ -135,6 +150,7 @@ public class TestCrudAppendBlobCompatibility {
     blobInStream.read(readAfterSeekBytes, 0, ONE_MEGABYTE);
 
     assertTrue(Arrays.equals(targetChunk, readAfterSeekBytes));
+    blobInStream.close();
   }
 
   /**
