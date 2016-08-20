@@ -347,6 +347,21 @@ abstract class StorageInterface {
      */
     public abstract CloudBlobWrapper getPageBlobReference(String relativePath)
         throws URISyntaxException, StorageException;
+    
+    /**
+     * Returns a wrapper for a CloudAppendBlob.
+     *
+     * @param relativePath
+     *            A <code>String</code> that represents the name of the blob, relative to the container
+     *
+     * @throws StorageException
+     *             If a storage service error occurred.
+     *
+     * @throws URISyntaxException
+     *             If URI syntax exception occurred.
+     */
+    public abstract CloudBlobWrapper getAppendBlobReference(String relativePath)
+        throws URISyntaxException, StorageException;
   }
   
   
@@ -775,5 +790,114 @@ abstract class StorageInterface {
     
     void uploadMetadata(OperationContext opContext)
         throws StorageException; 
+  }
+  
+  public abstract interface CloudAppendBlobWrapper extends CloudBlobWrapper {
+
+    /**
+     * Returns an output stream to an append blob that must already exist.
+     *
+     * @param accessCondition
+     *          A {@link AccessCondition} object that represents the access
+     *          conditions for the blob.
+     * 
+     * @param options
+     *          A {@link BlobRequestOptions} object that specifies any
+     *          additional options for the request. Specifying <code>null</code>
+     *          will use the default request options from the associated service
+     *          client ( {@link CloudBlobClient}).
+     * @param opContext
+     *          An {@link OperationContext} object that represents the context
+     *          for the current operation. This object is used to track requests
+     *          to the storage service, and to provide additional runtime
+     *          information about the operation.
+     *
+     * 
+     * @throws StorageException
+     *           If a storage service error occurred.
+     */
+    OutputStream openWriteExisting(AccessCondition accessCondition,
+        BlobRequestOptions options, OperationContext opContext)
+        throws StorageException;
+
+    /**
+     * Commits a new block of data to the end of the blob.
+     * 
+     * @param sourceStream
+     *          An <code>InputStream</code> object that represents the input
+     *          stream to write to the append blob.
+     * @param length
+     *          The length, in bytes, of the data to write.
+     * @param accessCondition
+     *          A {@link AccessCondition} object that represents the access
+     *          conditions for the blob.
+     * @param options
+     *          A {@link BlobRequestOptions} object that specifies any
+     *          additional options for the request. Specifying <code>null</code>
+     *          will use the default request options from the associated service
+     *          client ( {@link CloudBlobClient}).
+     * @param opContext
+     *          An {@link OperationContext} object that represents the context
+     *          for the current operation. This object is used to track requests
+     *          to the storage service, and to provide additional runtime
+     *          information about the operation.
+     * 
+     * 
+     * @throws IOException
+     *           If an I/O exception occurred.
+     * @throws StorageException
+     *           If a storage service error occurred.
+     */
+    Long appendBlock(InputStream sourceStream, long length,
+        AccessCondition accessCondition, BlobRequestOptions options,
+        OperationContext opContext) throws StorageException, IOException;
+
+    /**
+     * Returns an output stream to an append blob that already exists
+     *
+     * @param accessCondition
+     *          A {@link AccessCondition} object that represents the access
+     *          conditions for the blob.
+     * 
+     * @param options
+     *          A {@link BlobRequestOptions} object that specifies any
+     *          additional options for the request. Specifying <code>null</code>
+     *          will use the default request options from the associated service
+     *          client ( {@link CloudBlobClient}).
+     * @param opContext
+     *          An {@link OperationContext} object that represents the context
+     *          for the current operation. This object is used to track requests
+     *          to the storage service, and to provide additional runtime
+     *          information about the operation.
+     *
+     * 
+     * @throws StorageException
+     *           If a storage service error occurred.
+     */
+    void createOrReplace(AccessCondition accessCondition,
+        BlobRequestOptions options, OperationContext opContext)
+        throws StorageException;
+
+    /**
+     * Creates an append blob and opens an output stream to write data to the
+     * blob using the specified operation context.
+     *
+     * @param options
+     *          A {@link BlobRequestOptions} object that specifies any
+     *          additional options for the request. Specifying <code>null</code>
+     *          will use the default request options from the associated service
+     *          client ( {@link CloudBlobClient}).
+     * @param opContext
+     *          An {@link OperationContext} object that represents the context
+     *          for the current operation. This object is used to track requests
+     *          to the storage service, and to provide additional runtime
+     *          information about the operation.
+     *
+     *
+     * @throws StorageException
+     *           If a storage service error occurred.
+     */
+    OutputStream openOutputStream(BlobRequestOptions options,
+        OperationContext opContext) throws StorageException;
   }
 }

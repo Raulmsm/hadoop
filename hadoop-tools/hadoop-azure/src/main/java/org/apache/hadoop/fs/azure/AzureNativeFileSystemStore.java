@@ -46,6 +46,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.azure.StorageInterface.CloudAppendBlobWrapper;
 import org.apache.hadoop.fs.azure.StorageInterface.CloudBlobContainerWrapper;
 import org.apache.hadoop.fs.azure.StorageInterface.CloudBlobDirectoryWrapper;
 import org.apache.hadoop.fs.azure.StorageInterface.CloudBlobWrapper;
@@ -162,7 +163,7 @@ public class AzureNativeFileSystemStore implements NativeFileSystemStore {
 
   /**
    * Configuration key to indicate the set of directories in WASB where we
-   * should store files as page blobs instead of block blobs.
+   * should store files as page blobs instead of append or block blobs.
    *
    * Entries should be plain directory names (i.e. not URIs) with no leading or
    * trailing slashes. Delimit the entries with commas.
@@ -174,6 +175,20 @@ public class AzureNativeFileSystemStore implements NativeFileSystemStore {
    */
   private Set<String> pageBlobDirs;
   
+  /**
+   * Configuration key to indicate the set of directories in WASB where we
+   * should store files as append blobs instead of append block blobs.
+   *
+   * Entries should be plain directory names (i.e. not URIs) with no leading or
+   * trailing slashes. Delimit the entries with commas.
+   */
+  public static final String KEY_APPEND_BLOB_DIRECTORIES = 
+      "fs.azure.append.blob.dir";
+  /**
+   * The set of directories where we should store files as append blobs.
+   */
+  private Set<String> appendBlobDirs;
+
   /**
    * Configuration key to indicate the set of directories in WASB where
    * we should do atomic folder rename synchronized with createNonRecursive.
@@ -452,7 +467,11 @@ public class AzureNativeFileSystemStore implements NativeFileSystemStore {
     // Extract the directories that should contain page blobs
     pageBlobDirs = getDirectorySet(KEY_PAGE_BLOB_DIRECTORIES);
     LOG.debug("Page blob directories:  {}", setToString(pageBlobDirs));
-
+    
+    // Extract the directories that should contain append blobs
+    appendBlobDirs = getDirectorySet(KEY_APPEND_BLOB_DIRECTORIES);
+    LOG.debug("Append blob directories:  {}", setToString(appendBlobDirs));
+    
     // Extract directories that should have atomic rename applied.
     atomicRenameDirs = getDirectorySet(KEY_ATOMIC_RENAME_DIRECTORIES);
     String hbaseRoot;
@@ -1047,10 +1066,18 @@ public class AzureNativeFileSystemStore implements NativeFileSystemStore {
 
   /**
    * Checks if the given key in Azure Storage should be stored as a page
-   * blob instead of block blob.
+   * blob instead of an append or block blob.
    */
   public boolean isPageBlobKey(String key) {
     return isKeyForDirectorySet(key, pageBlobDirs);
+  }
+  
+  /**
+   * Checks if the given key in Azure Storage should be stored as an append blob
+   * instead of a page or block blob.
+   */
+  public boolean isAppendBlobKey(String key) {
+    return isKeyForDirectorySet(key, appendBlobDirs);
   }
 
   /**
@@ -1331,6 +1358,9 @@ public class AzureNativeFileSystemStore implements NativeFileSystemStore {
     if (blob instanceof CloudPageBlobWrapperImpl){
       return new PageBlobOutputStream(
           (CloudPageBlobWrapper)blob, getInstrumentedContext(), sessionConfiguration);
+    } else if (blob instanceof CloudAppendBlobWrapper) {
+      return ((CloudAppendBlobWrapper) blob)
+          .openOutputStream(getUploadOptions(), getInstrumentedContext());
     } else {
 
       // Handle both ClouldBlockBlobWrapperImpl and (only for the test code path)
@@ -1346,7 +1376,7 @@ public class AzureNativeFileSystemStore implements NativeFileSystemStore {
    */
   private InputStream openInputStream(CloudBlobWrapper blob)
       throws StorageException, IOException {
-    if (blob instanceof CloudBlockBlobWrapper) {
+    if (blob instanceof CloudBlockBlobWrapper  || blob instanceof CloudAppendBlobWrapper) {
       return blob.openInputStream(getDownloadOptions(),
           getInstrumentedContext(isConcurrentOOBAppendAllowed()));
     } else {
@@ -1731,6 +1761,8 @@ public class AzureNativeFileSystemStore implements NativeFileSystemStore {
     CloudBlobWrapper blob = null;
     if (isPageBlobKey(aKey)) {
       blob = this.container.getPageBlobReference(aKey);
+    } else if (isAppendBlobKey(aKey)) {
+      blob = this.container.getAppendBlobReference(aKey);
     } else {
       blob = this.container.getBlockBlobReference(aKey);
     blob.setStreamMinimumReadSizeInBytes(downloadBlockSizeBytes);
@@ -1930,7 +1962,8 @@ public class AzureNativeFileSystemStore implements NativeFileSystemStore {
       // Check if the directory/container has the blob items.
       for (ListBlobItem blobItem : objects) {
         if (blobItem instanceof CloudBlockBlobWrapper
-            || blobItem instanceof CloudPageBlobWrapper) {
+            || blobItem instanceof CloudPageBlobWrapper
+            || blobItem instanceof CloudAppendBlobWrapper) {
           LOG.debug("Found blob as a directory-using this file under it to infer its properties {}",
               blobItem.getUri());
 
@@ -2088,7 +2121,9 @@ public class AzureNativeFileSystemStore implements NativeFileSystemStore {
           break;
         }
 
-        if (blobItem instanceof CloudBlockBlobWrapper || blobItem instanceof CloudPageBlobWrapper) {
+        if (blobItem instanceof CloudBlockBlobWrapper
+            || blobItem instanceof CloudPageBlobWrapper
+            || blobItem instanceof CloudAppendBlobWrapper) {
           String blobKey = null;
           CloudBlobWrapper blob = (CloudBlobWrapper) blobItem;
           BlobProperties properties = blob.getProperties();
@@ -2223,7 +2258,9 @@ public class AzureNativeFileSystemStore implements NativeFileSystemStore {
         // Add the file metadata to the list if this is not a blob
         // directory item.
         //
-        if (blobItem instanceof CloudBlockBlobWrapper || blobItem instanceof CloudPageBlobWrapper) {
+        if (blobItem instanceof CloudBlockBlobWrapper
+            || blobItem instanceof CloudPageBlobWrapper
+            || blobItem instanceof CloudAppendBlobWrapper) {
           String blobKey = null;
           CloudBlobWrapper blob = (CloudBlobWrapper) blobItem;
           BlobProperties properties = blob.getProperties();
@@ -2744,8 +2781,12 @@ public class AzureNativeFileSystemStore implements NativeFileSystemStore {
 
       if (isPageBlobKey(key)) {
         throw new UnsupportedOperationException("Append not supported for Page Blobs");
+      } else if (isAppendBlobKey(key)) {
+        CloudBlobWrapper blob = this.container.getAppendBlobReference(key);
+        return new DataOutputStream(((CloudAppendBlobWrapper) blob)
+            .openOutputStream(getUploadOptions(), getInstrumentedContext()));
       }
-
+      
       CloudBlobWrapper blob =  this.container.getBlockBlobReference(key);
 
       BlockBlobAppendStream appendStream = new BlockBlobAppendStream((CloudBlockBlobWrapper) blob, key, bufferSize, getInstrumentedContext());

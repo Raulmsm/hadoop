@@ -54,6 +54,8 @@ interface NativeFileSystemStore {
       throws AzureException;
 
   boolean isPageBlobKey(String key);
+  
+  boolean isAppendBlobKey(String key);
 
   boolean isAtomicRenameKey(String key);
 

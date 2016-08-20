@@ -1343,7 +1343,7 @@ public class NativeAzureFileSystem extends FileSystem {
     return instrumentation;
   }
 
-  /** This optional operation is not yet supported. */
+  /** This operation is currently only supported for Append blobs*/
   @Override
   public FSDataOutputStream append(Path f, int bufferSize, Progressable progress)
       throws IOException {
@@ -1598,7 +1598,7 @@ public class NativeAzureFileSystem extends FileSystem {
     PermissionStatus permissionStatus = createPermissionStatus(masked);
 
     OutputStream bufOutStream;
-    if (store.isPageBlobKey(key)) {
+    if (store.isPageBlobKey(key) || store.isAppendBlobKey(key)) {
       // Store page blobs directly in-place without renames.
       bufOutStream = store.storefile(key, permissionStatus);
     } else {
