@@ -49,6 +49,7 @@ import com.microsoft.azure.storage.StorageCredentialsAnonymous;
 import com.microsoft.azure.storage.blob.BlobContainerPermissions;
 import com.microsoft.azure.storage.blob.BlobContainerPublicAccessType;
 import com.microsoft.azure.storage.blob.BlobOutputStream;
+import com.microsoft.azure.storage.blob.CloudAppendBlob;
 import com.microsoft.azure.storage.blob.CloudBlobClient;
 import com.microsoft.azure.storage.blob.CloudBlobContainer;
 import com.microsoft.azure.storage.blob.CloudBlockBlob;
@@ -80,6 +81,7 @@ public final class AzureBlobStorageTestAccount {
   private static final String KEY_DISABLE_THROTTLING = "fs.azure.disable.bandwidth.throttling";
   private static final String KEY_READ_TOLERATE_CONCURRENT_APPEND = "fs.azure.io.read.tolerate.concurrent.append";
   public static final String DEFAULT_PAGE_BLOB_DIRECTORY = "pageBlobs";
+  public static final String DEFAULT_APPEND_BLOB_DIRECTORY = "appendBlobs";
   public static final String DEFAULT_ATOMIC_RENAME_DIRECTORIES = "/atomicRenameDir1,/atomicRenameDir2";
 
   private CloudStorageAccount account;
@@ -224,7 +226,7 @@ public final class AzureBlobStorageTestAccount {
     return container.getBlockBlobReference(
         String.format(blobKey));
   }
-
+ 
   /**
    * Acquires a short lease on the given blob in this test account.
    * 
@@ -290,6 +292,22 @@ public final class AzureBlobStorageTestAccount {
     if (conf.get(AzureNativeFileSystemStore.KEY_PAGE_BLOB_DIRECTORIES) == null) {
       conf.set(AzureNativeFileSystemStore.KEY_PAGE_BLOB_DIRECTORIES,
           "/" + DEFAULT_PAGE_BLOB_DIRECTORY);
+    }
+  }
+  
+  /**
+   * Set the append blob directories configuration to the default if it is not
+   * already set. Some tests may set it differently (e.g. the page blob tests in
+   * TestNativeAzureFSPageBlobLive).
+   * 
+   * @param conf
+   *          The configuration to conditionally update.
+   */
+  private static void configureAppendBlobDir(Configuration conf) {
+    if (conf
+        .get(AzureNativeFileSystemStore.KEY_APPEND_BLOB_DIRECTORIES) == null) {
+      conf.set(AzureNativeFileSystemStore.KEY_APPEND_BLOB_DIRECTORIES,
+          "/" + DEFAULT_APPEND_BLOB_DIRECTORY);
     }
   }
 
@@ -519,6 +537,7 @@ public final class AzureBlobStorageTestAccount {
     CloudBlobContainer container = null;
     Configuration conf = createTestConfiguration(initialConfiguration);
     configurePageBlobDir(conf);
+    configureAppendBlobDir(conf);
     configureAtomicRenameDir(conf);
     CloudStorageAccount account = createTestAccount(conf);
     if (account == null) {
