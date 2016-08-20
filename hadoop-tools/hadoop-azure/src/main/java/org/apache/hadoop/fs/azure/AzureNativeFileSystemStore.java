@@ -2776,24 +2776,25 @@ public class AzureNativeFileSystemStore implements NativeFileSystemStore {
 
   @Override
   public DataOutputStream retrieveAppendStream(String key, int bufferSize) throws IOException {
-
     try {
-
+      
       if (isPageBlobKey(key)) {
         throw new UnsupportedOperationException("Append not supported for Page Blobs");
       } else if (isAppendBlobKey(key)) {
         CloudBlobWrapper blob = this.container.getAppendBlobReference(key);
         return new DataOutputStream(((CloudAppendBlobWrapper) blob)
             .openOutputStream(getUploadOptions(), getInstrumentedContext()));
+      } else {
+        CloudBlobWrapper blob = this.container.getBlockBlobReference(key);
+
+        BlockBlobAppendStream appendStream = new BlockBlobAppendStream(
+            (CloudBlockBlobWrapper) blob, key, bufferSize,
+            getInstrumentedContext());
+        appendStream.initialize();
+
+        return new DataOutputStream(appendStream);
       }
-      
-      CloudBlobWrapper blob =  this.container.getBlockBlobReference(key);
-
-      BlockBlobAppendStream appendStream = new BlockBlobAppendStream((CloudBlockBlobWrapper) blob, key, bufferSize, getInstrumentedContext());
-      appendStream.initialize();
-
-      return new DataOutputStream(appendStream);
-    } catch(Exception ex) {
+    } catch (Exception ex) {
       throw new AzureException(ex);
     }
   }
