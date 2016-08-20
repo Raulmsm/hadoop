@@ -55,6 +55,8 @@ interface NativeFileSystemStore {
 
   boolean isPageBlobKey(String key);
 
+  boolean isAppendBlobKey(String key);
+
   boolean isAtomicRenameKey(String key);
 
   void storeEmptyLinkFile(String key, String tempBlobKey,
